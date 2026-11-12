@@ -11,6 +11,7 @@ typedef struct musica{
 
 /* M01: implementar em musica.c. Retorna NULL em falha. */
 t_musica *musica_criar(int id, const char *titulo, const char *artista, int duracao);
+/*Interface da função que imprime os dados da musica*/
 void musica_imprimir(void *carga);
 
 
