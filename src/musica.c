@@ -18,11 +18,11 @@ t_musica *musica_criar(int id, const char *titulo, const char *artista, int dura
     return musica;
 }
 
-/*Implemantação da funcão que imprime as 
-* informação da musica
+/*Implemantação da funcão que imprime as informação da musica
+@param @typedef t_musica
 */
-void musica_imprimir(void *carga){
-    if ((t_musica*)carga != NULL){
+void musica_imprimir(t_musica *carga){
+    if (carga != NULL){
         t_musica *musica = carga;
         printf("Musica: %s - %s , duração: %d\n", musica->titulo,musica->artista,musica->duracao);
     }    
