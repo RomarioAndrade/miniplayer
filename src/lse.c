@@ -1,5 +1,6 @@
 #include "lse.h"
 #include <stddef.h>
+#include <stdlib.h>
 
 /* Representacao interna: NAO mover para lse.h. */
 typedef struct elem {
@@ -16,12 +17,19 @@ struct lse {
 
 /* Stubs intencionalmente incompletos; testes devem falhar ate implementacao. */
 t_lse *lse_criar(void) { 
-    t_lse *list = malloc()
-
-    return NULL; 
+    t_lse *lista = malloc(sizeof(t_lse));
+    lista->tamanho = 0;
+    lista->inicio = NULL;
+    return lista; 
 } /* TODO M02/M03 */
 
-int lse_tamanho(const t_lse *l) { (void)l; return -1; } /* TODO M03 */
+int lse_tamanho(const t_lse *l) { 
+    if(l != NULL){
+        return l->tamanho;
+    }
+} /* TODO M03 */
+
+
 void *lse_primeiro(const t_lse *l) { (void)l; return NULL; } /* TODO M03 */
 int lse_inserir_inicio(t_lse *l, void *c) { (void)l; (void)c; return 0; } /* TODO M04 */
 int lse_inserir_fim(t_lse *l, void *c) { (void)l; (void)c; return 0; } /* TODO M04 */
