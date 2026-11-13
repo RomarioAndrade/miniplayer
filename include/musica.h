@@ -16,5 +16,6 @@ void musica_imprimir(t_musica *carga);
 
 
 void musica_destruir(void *carga);
+/*/*skvnksd*/
 
 #endif
