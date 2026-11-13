@@ -18,7 +18,9 @@ t_musica *musica_criar(int id, const char *titulo, const char *artista, int dura
     return musica;
 }
 
-/*Implemantação da funcão que imprime as informação da musica*/
+/*Implemantação da funcão que imprime as 
+* informação da musica
+*/
 void musica_imprimir(void *carga){
     if ((t_musica*)carga != NULL){
         t_musica *musica = carga;
