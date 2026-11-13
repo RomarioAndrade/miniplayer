@@ -1,6 +1,6 @@
 # Diário de bordo
 ## Missão M01 — 11/11
-- Integrantes e papéis:
+- Integrantes e papéis: João Guilherme Martins, Romário Andrade
 - Objetivo:
 - O que implementamos:
 - Decisão técnica e justificativa:
