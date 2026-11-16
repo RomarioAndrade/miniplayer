@@ -54,9 +54,22 @@ void *lse_primeiro(const t_lse *l)
 
 int lse_inserir_inicio(t_lse *l, void *c)
 {
-    (void)l;
-    (void)c;
-    return 0;
+    if (l == NULL || c == NULL)
+    {
+        return 0;
+    }
+
+    t_elem novo = malloc(sizeof(t_elem)); / cria um nó novo */
+    if (novo == NULL)
+    {
+        return 0; /* sem memória: lista fica igual */
+    }
+    novo->carga = c;        /* guarda a carga dentro do nó */
+    novo->prox = l->inicio; /* novo aponta para o antigo primeiro */
+    l->inicio = novo;       /* novo vira o primeiro */
+    l->tamanho++;
+    return 1;
+
 } /* TODO M04 */
 int lse_inserir_fim(t_lse *l, void *c)
 {
