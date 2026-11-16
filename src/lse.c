@@ -70,7 +70,7 @@ int lse_inserir_inicio(t_lse *l, void *c)
     l->tamanho++;
     return 1;
 
-} /* TODO M04 */
+}/* M03 */
 int lse_inserir_fim(t_lse *l, void *c)
 {
     (void)l;
