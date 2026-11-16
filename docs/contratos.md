@@ -41,9 +41,9 @@ Para **cada função**, preencher:
 - Testes: `teste_lista_vazia`.
 
 ### `void lse_destruir(t_lse *lista, void (*destruir_carga)(void *))`
-- Pré-condições: `lista` criada por `lse_criar` (ou `NULL`, que é ignorado).
-- Pós-condições: todos os nós `t_elem` e a própria `t_lse` são liberados; o ponteiro `lista` não deve mais ser usado.
+- Pré-condições: `lista` criada por `lse_criar`; `destruir_carga` sabe destruir as cargas (ex.: `musica_destruir`).
+- Pós-condições: cargas, nós e lista liberados.
 - Retorno: nenhum.
-- Memória: a LSE libera somente o que ela alocou (nós e cabeçalho). As cargas só são liberadas se `destruir_carga != NULL`; com `NULL`, as cargas de terceiros não são tocadas.
+- Memória: com `destruir_carga == NULL`, as cargas não são liberadas.
 - Invariantes: não se aplica (a lista deixa de existir).
 - Testes: `teste_lista_vazia` (lista vazia, `destruir_carga == NULL`), verificado sem vazamentos com `-fsanitize=address`.

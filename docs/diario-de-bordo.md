@@ -14,7 +14,7 @@ Musica: wasurerarenai - sakanaction , duração: 4
 - Integrantes e papéis: João Guilherme Martins (Tester), Romário Andrade (Desenvolvedor)
 - Objetivo: fazer a lista funcionar no caso mais simples, que é a lista vazia: criar, ver o tamanho, pegar o primeiro elemento e destruir. Tudo isso no nosso próprio `lse.c`, sem trocar pelo arquivo do kit.
 - O que implementamos: as funções `lse_criar`, `lse_tamanho`, `lse_primeiro` e `lse_destruir`. Antes de mexer em qualquer coisa fizemos um commit de segurança ("checkpoint antes da M02") e extraímos o pacote da missão com `unzip -n`, pra não correr o risco de sobrescrever nada nosso. Os 4 arquivos entraram em `missoes/M02/` sem problema.
-- Decisão técnica e justificativa: o que deu mais o que pensar foi o `lse_destruir`. Como a lista guarda tudo como `void *`, ela não faz ideia do que tem lá dentro, então não dá pra ela simplesmente sair dando `free` em tudo. O que a lista criou (os nós e ela mesma) ela libera sempre. Se a gente passa `NULL`, ela não mexe nas cargas. 
+- Decisão técnica e justificativa: a lista não sabe o tipo das cargas, então o `lse_destruir` recebe a função que apaga cada uma (ex.: `musica_destruir`). Com `NULL`, as cargas não são tocadas.
 - Problema encontrado e solução: a gente já tinha começado a `lse_criar` e a `lse_tamanho` antes da missão, e o teste até passava, mas olhando com mais cuidado tinha três coisas erradas:
   - a `lse_criar` não conferia se o `malloc` tinha dado certo. Colocamos um `if` pra devolver `NULL` nesse caso;
   - a `lse_tamanho` não tinha `return` quando a lista era `NULL`. O gcc avisava (`control reaches end of non-void function`), mas isso tinha passado despercebido. Agora devolve 0;
