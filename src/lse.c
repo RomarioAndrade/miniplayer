@@ -32,12 +32,12 @@ t_lse *lse_criar(void)
     return lista;
 } /* M02 */
 
-/* Devolve o numero de elementos; 0 se a lista for NULL. */
+/* Devolve o numero de elementos; -1 se a lista for NULL. */
 int lse_tamanho(const t_lse *l)
 {
     if (l == NULL)
     {
-        return 0;
+        return -1;
     }
     return l->tamanho;
 } /* M02 */
