@@ -16,28 +16,41 @@ struct lse
     /* M08 (otimizacao opcional): t_elem *fim; */
 };
 
-/* Stubs intencionalmente incompletos; testes devem falhar ate implementacao. */
+/* M02: criacao, consultas e destruicao implementadas.
+   Demais funcoes continuam como stubs ate as proximas missoes. */
+
+/* Devolve lista vazia alocada ou NULL em falha de memoria. */
 t_lse *lse_criar(void)
 {
     t_lse *lista = malloc(sizeof(t_lse));
+    if (lista == NULL)
+    {
+        return NULL;
+    }
     lista->tamanho = 0;
     lista->inicio = NULL;
     return lista;
-} /* TODO M02/M03 */
+} /* M02 */
 
+/* Devolve o numero de elementos; 0 se a lista for NULL. */
 int lse_tamanho(const t_lse *l)
 {
-    if (l != NULL)
+    if (l == NULL)
     {
-        return l->tamanho;
+        return 0;
     }
-} /* TODO M03 */
+    return l->tamanho;
+} /* M02 */
 
+/* Devolve a carga do primeiro elemento sem remove-lo; NULL se vazia ou NULL. */
 void *lse_primeiro(const t_lse *l)
 {
-    (void)l;
-    return NULL;
-} /* TODO M03 */
+    if (l == NULL || l->inicio == NULL)
+    {
+        return NULL;
+    }
+    return l->inicio->carga;
+} /* M02 */
 
 int lse_inserir_inicio(t_lse *l, void *c)
 {
@@ -77,8 +90,26 @@ int lse_inserir_ordenado(t_lse *l, void *c, t_comparador cmp)
     (void)cmp;
     return 0;
 } /* TODO M05 */
+
+/* Libera todos os nos e a propria lista.
+   As cargas so sao liberadas se 'destruir' != NULL; com NULL, a lista
+   nao toca nas cargas (elas pertencem a terceiros). Aceita l == NULL. */
 void lse_destruir(t_lse *l, void (*destruir)(void *))
 {
-    (void)l;
-    (void)destruir; /* TODO M03 */
-}
+    if (l == NULL)
+    {
+        return;
+    }
+    t_elem *atual = l->inicio;
+    while (atual != NULL)
+    {
+        t_elem *prox = atual->prox;
+        if (destruir != NULL)
+        {
+            destruir(atual->carga);
+        }
+        free(atual);
+        atual = prox;
+    }
+    free(l);
+} /* M02 */

@@ -18,10 +18,10 @@ t_musica *musica_criar(int id, const char *titulo, const char *artista, int dura
     return musica;
 }
 
-/*Implemantação da funcão que imprime as informação da musica
-@param @typedef t_musica
-*/
-void musica_imprimir(t_musica *carga){
+/* Imprime titulo, artista e duracao da musica.
+   @param carga ponteiro para t_musica (recebido como void* para servir de
+          callback generico da LSE); se NULL, nao imprime nada. */
+void musica_imprimir(void *carga){
     if (carga != NULL){
         t_musica *musica = carga;
         printf("Musica: %s - %s , duração: %d\n", musica->titulo,musica->artista,musica->duracao);
