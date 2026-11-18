@@ -71,6 +71,20 @@ int lse_inserir_inicio(t_lse *l, void *c)
     return 1;
 
 }/* M03 */
+
+/* Visita as cargas do inicio ao fim. Nao faz nada se lista ou callback for NULL. */
+void lse_percorrer(const t_lse *l, t_lse_visitar cb_visitar)
+{
+    if (l == NULL || cb_visitar == NULL)
+    {
+        return;
+    }
+    for (t_elem *atual = l->inicio; atual != NULL; atual = atual->prox)
+    {
+        cb_visitar(atual->carga);
+    }
+} /* M03 */
+
 int lse_inserir_fim(t_lse *l, void *c)
 {
     (void)l;
