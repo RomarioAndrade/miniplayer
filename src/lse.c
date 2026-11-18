@@ -54,12 +54,12 @@ void *lse_primeiro(const t_lse *l)
 
 int lse_inserir_inicio(t_lse *l, void *c)
 {
-    if (l == NULL || c == NULL)
+    if (l == NULL)
     {
         return 0;
     }
 
-    t_elem novo = malloc(sizeof(t_elem)); / cria um nó novo */
+    t_elem *novo = malloc(sizeof(t_elem)); /* cria um nó novo */
     if (novo == NULL)
     {
         return 0; /* sem memória: lista fica igual */
