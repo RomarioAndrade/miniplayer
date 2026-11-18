@@ -87,14 +87,46 @@ void lse_percorrer(const t_lse *l, t_lse_visitar cb_visitar)
 
 int lse_inserir_fim(t_lse *l, void *c)
 {
-    (void)l;
-    (void)c;
-    return 0;
+    if (l == NULL ||c ==NULL)
+    {
+        return -1;
+    }
+    t_elem *atual = l->inicio;
+    while (atual->prox != NULL)
+    {
+        atual = atual->prox;
+    }
+    t_elem *novo = malloc(sizeof(t_elem)); //novo nó
+    if (novo !=NULL)
+    {
+        novo->prox = NULL;
+        novo->carga = c;
+
+        l->tamanho++;
+        
+        atual->prox = novo;
+        
+        return 0; //definir codigo de mensagem de erro
+    }
+
 } /* TODO M04 */
 void *lse_remover_inicio(t_lse *l)
 {
-    (void)l;
-    return NULL;
+    if (l == NULL)
+    {
+        return;
+    }
+
+    t_elem *del_node = l->inicio;
+    void *carga = del_node->carga;
+    l->inicio = del_node->prox;
+    l->tamanho --;
+
+    //free(del_node->carga);
+    free(del_node);
+
+    return carga;
+    
 } /* TODO M04 */
 void *lse_buscar(const t_lse *l, const void *ch, t_comparador cmp)
 {

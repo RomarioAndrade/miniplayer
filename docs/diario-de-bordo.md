@@ -1,6 +1,6 @@
 # Diário de bordo
 ## Missão M01 — 11/11
-- Integrantes e papéis: João Guilherme Martins, Romário Andrade
+- Integrantes e papéis: João Guilherme Martins (Tester), Romário Andrade (Desenvolvedor)
 - Objetivo: Implemtar uma função(`musica_imprimir`) que imprima na saida as informações de uma musica
 - O que implementamos:`musica_imprimir`
 - Decisão técnica e justificativa: deixamos a `musica_imprimir` recebendo `void *carga`, igual à `musica_destruir`. A ideia é que, mais pra frente, dê pra passar ela direto pra uma função da lista que percorre todas as músicas, sem ter que criar uma função extra só pra converter o tipo.

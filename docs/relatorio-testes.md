@@ -1,16 +1,35 @@
 # Relatório de testes
+
+## M01 — Música
 | ID | Missão | Função/contrato | Entrada/cenário | Resultado esperado | Resultado obtido | Status |
 |---|---|---|---|---|---|---|
-| T01 | M01 | musica_criar | dados válidos | ponteiro não nulo e campos corretos | preencher | pendente |
+| T01 | M01 | musica_criar | dados válidos: `1, "wasurerarenai", "sakanaction", 4` | ponteiro não nulo e campos corretos | ponteiro válido; `id`, `titulo` e `duracao` conferidos pelos `assert` | aprovado |
+| T01b | M01 | musica_imprimir | música criada no T01 | mostrar título, artista e duração | `Musica: wasurerarenai - sakanaction , duração: 4` | aprovado |
+| T01c | M01 | musica_destruir | música criada no T01 | memória liberada, sem vazamento | AddressSanitizer não acusou nada | aprovado |
 
-## Casos-limite
-- Estrutura vazia:
-- Estrutura com um elemento:
-- Chave inexistente:
-- Falha de alocação (discutir estratégia de simulação):
+### Execução
+```
+$ make test
+gcc -std=c11 -Wall -Wextra -Wpedantic -g -Iinclude tests/test_musica.c src/musica.c -o build/test_musica
+== build/test_musica ==
+Musica: wasurerarenai - sakanaction , duração: 4
+```
+Compilou sem nenhum aviso.
 
-## Memória
-Registrar comandos de compilação, ferramentas utilizadas e problemas corrigidos.
+### Memória (M01)
+Rodamos o mesmo teste com o AddressSanitizer:
+```
+$ gcc -std=c11 -Wall -Wextra -Wpedantic -g -fsanitize=address,undefined -Iinclude tests/test_musica.c src/musica.c -o build/test_musica_asan
+$ ./build/test_musica_asan
+Musica: wasurerarenai - sakanaction , duração: 4
+```
+Nenhum vazamento nem acesso inválido.
+
+### O que ainda não foi testado
+- Falha de `malloc` na `musica_criar`: hoje o código não confere se o `malloc` devolveu `NULL`.
+- Título ou artista com mais de 79 caracteres: a `musica_criar` usa `strcpy`, que estoura o vetor de 80 posições nesse caso.
+- `musica_imprimir(NULL)`: o código trata (não imprime nada), mas o teste não cobre.
+- `musica_destruir(NULL)`: para o programa no `assert`.
 
 ## M02 — Lista vazia
 | ID | Missão | Função/contrato | Entrada/cenário | Resultado esperado | Resultado obtido | Status |
