@@ -16,6 +16,8 @@ struct lse
     /* M08 (otimizacao opcional): t_elem *fim; */
 };
 
+
+
 /* M02: criacao, consultas e destruicao implementadas.
    Demais funcoes continuam como stubs ate as proximas missoes. */
 
@@ -87,34 +89,42 @@ void lse_percorrer(const t_lse *l, t_lse_visitar cb_visitar)
 
 int lse_inserir_fim(t_lse *l, void *c)
 {
-    if (l == NULL ||c ==NULL)
+    if (l == NULL)
     {
         return -1;
+    } 
+    t_elem *novo = malloc(sizeof(t_elem)); // Não é NULL então crio novo nó
+    novo->prox = NULL;
+    novo->carga = c;
+
+    if (l->inicio == NULL)
+    {
+        l->inicio = novo;
+        l->tamanho++;
+        return 1;
     }
+    
     t_elem *atual = l->inicio;
     while (atual->prox != NULL)
     {
         atual = atual->prox;
-    }
-    t_elem *novo = malloc(sizeof(t_elem)); //novo nó
-    if (novo !=NULL)
-    {
-        novo->prox = NULL;
-        novo->carga = c;
+    }   
 
-        l->tamanho++;
-        
-        atual->prox = novo;
-        
-        return 0; //definir codigo de mensagem de erro
+    if (novo !=NULL)
+    { 
+        l->tamanho++;        
+        atual->prox = novo;        
+        return 1; //definir codigo de mensagem de erro
     }
+
+    return 0;
 
 } /* TODO M04 */
 void *lse_remover_inicio(t_lse *l)
 {
-    if (l == NULL)
+    if (l == NULL || l->inicio == NULL ) //decisão de projeto
     {
-        return;
+        return NULL;
     }
 
     t_elem *del_node = l->inicio;
@@ -130,9 +140,11 @@ void *lse_remover_inicio(t_lse *l)
 } /* TODO M04 */
 void *lse_buscar(const t_lse *l, const void *ch, t_comparador cmp)
 {
+    
     (void)l;
     (void)ch;
     (void)cmp;
+    
     return NULL;
 } /* TODO M04 */
 void *lse_remover(t_lse *l, const void *ch, t_comparador cmp)
