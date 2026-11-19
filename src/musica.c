@@ -28,6 +28,10 @@ void musica_imprimir(void *carga){
     }    
 }
 
+int musica_t(void *c,void *p){
+    return 0;
+}
+
 void musica_destruir(void *carga)
 {
     assert(carga!=NULL);    

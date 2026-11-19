@@ -16,8 +16,6 @@ struct lse
     /* M08 (otimizacao opcional): t_elem *fim; */
 };
 
-
-
 /* M02: criacao, consultas e destruicao implementadas.
    Demais funcoes continuam como stubs ate as proximas missoes. */
 
@@ -72,7 +70,7 @@ int lse_inserir_inicio(t_lse *l, void *c)
     l->tamanho++;
     return 1;
 
-}/* M03 */
+} /* M03 */
 
 /* Visita as cargas do inicio ao fim. Nao faz nada se lista ou callback for NULL. */
 void lse_percorrer(const t_lse *l, t_lse_visitar cb_visitar)
@@ -92,7 +90,7 @@ int lse_inserir_fim(t_lse *l, void *c)
     if (l == NULL)
     {
         return -1;
-    } 
+    }
     t_elem *novo = malloc(sizeof(t_elem)); // Não é NULL então crio novo nó
     novo->prox = NULL;
     novo->carga = c;
@@ -103,18 +101,17 @@ int lse_inserir_fim(t_lse *l, void *c)
         l->tamanho++;
         return 1;
     }
-    
-    t_elem *atual = l->inicio;
-    while (atual->prox != NULL)
-    {
-        atual = atual->prox;
-    }   
 
-    if (novo !=NULL)
-    { 
-        l->tamanho++;        
-        atual->prox = novo;        
-        return 1; //definir codigo de mensagem de erro
+    t_elem *atual = l->inicio;
+    if (novo != NULL)
+    {
+        while (atual->prox != NULL)
+        {
+            atual = atual->prox;
+        }
+        l->tamanho++;
+        atual->prox = novo;
+        return 1; // definir codigo de mensagem de erro
     }
 
     return 0;
@@ -122,7 +119,7 @@ int lse_inserir_fim(t_lse *l, void *c)
 } /* TODO M04 */
 void *lse_remover_inicio(t_lse *l)
 {
-    if (l == NULL || l->inicio == NULL ) //decisão de projeto
+    if (l == NULL || l->inicio == NULL) // decisão de projeto
     {
         return NULL;
     }
@@ -130,23 +127,37 @@ void *lse_remover_inicio(t_lse *l)
     t_elem *del_node = l->inicio;
     void *carga = del_node->carga;
     l->inicio = del_node->prox;
-    l->tamanho --;
+    l->tamanho--;
 
-    //free(del_node->carga);
+    // free(del_node->carga);
     free(del_node);
 
     return carga;
-    
-} /* TODO M04 */
+
+} /* TODO M04 
+
+/* Busca a carga cuja chave satisfaz cmp(carga, chave) == 0; NULL se nao encontrar.
+    @param t_lse* 
+    @param void*ch 
+    @param t_comparador*
+    @return void *carga 
+*/
 void *lse_buscar(const t_lse *l, const void *ch, t_comparador cmp)
 {
-    
-    (void)l;
-    (void)ch;
-    (void)cmp;
-    
+    if (l == NULL || cmp == NULL)
+    {
+        return NULL;
+    }
+    //seguindo a mesma logica do for em lse_percorrer
+    for (t_elem *elemento = l->inicio; elemento != NULL; elemento = elemento->prox)
+    {
+        if (cmp(elemento->carga, ch) == 0)
+        {
+            return elemento->carga;
+        }
+    }
     return NULL;
-} /* TODO M04 */
+} /* M04 */
 void *lse_remover(t_lse *l, const void *ch, t_comparador cmp)
 {
     (void)l;

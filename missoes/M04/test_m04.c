@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <stdio.h>
 #include "lse.h"
-#include "musica.h"
 
 static int comparar_int(const void *carga, const void *chave) {
     int a = *(const int *)carga, b = *(const int *)chave;
@@ -65,7 +64,7 @@ static void teste_remover_inicio(void) {
     lse_destruir(l,NULL);
 }
 static void teste_generico_musicas(void) {
-    t_musica a={11,"A"}, b={22,"B"};
+    musica_t a={11,"A"}, b={22,"B"};
     int chave=22;
     t_lse *l=lse_criar(); assert(l);
     assert(lse_inserir_fim(l,&a)==1);
