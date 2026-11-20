@@ -134,7 +134,7 @@ void *lse_remover_inicio(t_lse *l)
 
     return carga;
 
-} /* TODO M04 
+}  /* M04 */
 
 /* Busca a carga cuja chave satisfaz cmp(carga, chave) == 0; NULL se nao encontrar.
     @param t_lse* 
@@ -158,20 +158,41 @@ void *lse_buscar(const t_lse *l, const void *ch, t_comparador cmp)
     }
     return NULL;
 } /* M04 */
+
+/* Remove o PRIMEIRO no cuja carga satisfaz cmp(carga, chave) == 0.
+   Libera somente o no; a carga e devolvida a quem chamou (nao e liberada aqui).
+   Devolve NULL se nao encontrar, ou se lista/cmp for NULL. */
 void *lse_remover(t_lse *l, const void *ch, t_comparador cmp)
 {
-    (void)l;
-    (void)ch;
-    (void)cmp;
-    return NULL;
-} /* TODO M04 */
-int lse_inserir_ordenado(t_lse *l, void *c, t_comparador cmp)
-{
-    (void)l;
-    (void)c;
-    (void)cmp;
-    return 0;
-} /* TODO M05 */
+    if (l == NULL || cmp == NULL)
+    {
+        return NULL;
+    }
+
+    t_elem *anterior = NULL;
+    t_elem *atual = l->inicio;
+    while (atual != NULL)
+    {
+        if (cmp(atual->carga, ch) == 0)
+        {
+            if (anterior == NULL)
+            {
+                l->inicio = atual->prox; /* removeu o primeiro no */
+            }
+            else
+            {
+                anterior->prox = atual->prox; /* "pula" o no removido */
+            }
+            void *carga = atual->carga;
+            free(atual); /* libera so o no, nunca a carga */
+            l->tamanho--;
+            return carga;
+        }
+        anterior = atual;
+        atual = atual->prox;
+    }
+    return NULL; /* chave nao encontrada */
+} /* M04 */
 
 /* Destroi cada carga com 'destruir' e libera a lista (NULL: nao toca nas cargas). */
 void lse_destruir(t_lse *l, void (*destruir)(void *))
