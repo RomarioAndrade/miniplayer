@@ -39,14 +39,31 @@ Musica: wasurerarenai - sakanaction , duração: 4
   - O `gcc` não estava instalado no Windows; compilamos e testamos pelo WSL.
 - Evidências de testes: `make -f missoes/M03/Makefile.incremental test_m03` → `M03: todos os testes passaram.`, sem avisos de compilação. Também rodamos com AddressSanitizer e UBSan, sem nenhum erro. Detalhes no relatório de testes.
 - Próxima ação: M04 (inserir no fim, remover e buscar). O `tests/test_lse.c` antigo ainda para na linha de `lse_remover_inicio`, o que é esperado até lá.
-
-## Missão M04 — 18/11 (em andamento)
+s
+## Missão M04 — 18/11 a 20/11
 - Integrantes e papéis: João Guilherme Martins (Tester), Romário Andrade (Desenvolvedor)
-- Objetivo: inserir no fim, buscar por chave e remover sem quebrar o encadeamento.
-- O que implementamos: `lse_inserir_fim`, `lse_remover_inicio` e `lse_buscar`. Falta `lse_remover` e completar os trechos marcados em `test_m04.c`.
-- Decisão técnica e justificativa: busca e remoção usam callback de comparação, para a lista continuar sem conhecer `t_musica`. Remover libera só o nó; a carga volta para quem chamou.
+- Objetivo: inserir no fim, buscar por chave e remover (do início ou por chave) sem quebrar o encadeamento da lista.
+- O que implementamos: em `src/lse.c`, `lse_inserir_fim`, `lse_remover_inicio` e `lse_buscar` (Romário) e `lse_remover` (João, a pedido do Romário, que revisou e concordou com o código). Em `missoes/M04/test_m04.c`, completamos os três trechos que o professor deixou em branco: inserção no fim e busca, remoção do fim e do início, e remoção do início em lista com elementos. Também fizemos duas correções no código existente (ver problemas abaixo).
+- Decisão técnica e justificativa:
+  - Busca e remoção usam o callback `t_comparador`, para a lista continuar sem conhecer `t_musica`.
+  - Remover libera só o nó; a carga volta para quem chamou, que decide se libera.
+  - Com chave repetida, busca e remoção agem só na primeira ocorrência.
+  - `lse_remover` religa a cadeia e guarda a carga antes do `free`, para nunca ler o nó depois de liberado.
+  - Sem ponteiro `fim`, inserir no fim custa O(n); o `fim` fica para a M08.
+  - Carga `NULL` continua aceita (decisão da M03), mas isso deixa ambíguo o retorno `NULL` de busca e remoção ("não achou" ou "achou carga NULL"). Os testes não usam carga `NULL` nesses casos e a limitação está registrada em `docs/contratos.md`, junto com a ideia de uma API futura com parâmetro de saída.
+  - O enunciado chama o tipo do comparador de `t_comparador_lse`, mas o `lse.h` do projeto usa `t_comparador`. Mantivemos `t_comparador` e não alteramos o cabeçalho.
 - Problema encontrado e solução:
-  - A regra da M04 estava copiada no `Makefile` principal. Trocamos pela inclusão automática de `missoes/M*/Makefile.incremental`; agora `make test_m02`, `make test_m03`, `make test_m04` e `make test_missoes` funcionam na raiz (19/11).
-  - Pendências em `lse_inserir_fim`: devolve `-1` em vez de `0` para lista `NULL` e não confere o `malloc` antes de usar o nó.
-- Evidências de testes: M02 e M03 continuam passando (sem regressão); M04 para em `lse_remover`. Detalhes no relatório de testes.
-- Próxima ação: implementar `lse_remover`, corrigir `lse_inserir_fim` e completar os testes.
+  - **`lse_inserir_fim` devolvia `-1` para lista `NULL`**, mas o contrato e o teste do professor (`lse_inserir_fim(NULL,&x)==0`) esperam `0`. O teste da M04 abortava justamente nessa linha. O Romário concordou e passamos a devolver `0`.
+  - **`lse_inserir_fim` usava o nó antes de conferir o `malloc`** (escrevia em `novo->prox` e só depois testava `NULL`). Agora confere o `malloc` antes de usar o nó e devolve `0` sem alterar a lista.
+  - **`lse_tamanho(NULL)` devolvia `-1`**, mas o contrato da M02 diz `0`. Combinamos com o Romário que o certo é `0` e alinhamos o código com o contrato.
+  - **Aviso do compilador `'/*' within comment`** (`-Wcomment`): um comentário `/* TODO M04` ficou sem fechar no fim de `lse_remover_inicio`. Fechamos o comentário (`/* M04 */`).
+  - **Erro `redefinition of 'lse_remover'`** ao colar a função: o stub antigo (`return NULL;` com `TODO M04`) ainda estava no arquivo. Apagamos o stub e deixamos só a implementação.
+  - **Conflito no `git pull`** nos documentos: o Romário tinha usado `git commit --amend`, e o histórico local e o remoto divergiram. Cancelamos o merge (`git merge --abort`), criamos um branch de segurança (`backup-local-19-11`), conferimos com `git diff` que só o `Makefile` e quatro documentos diferiam e alinhamos com o remoto (`git reset --hard origin/main`), sem perder código.
+  - **`Makefile` principal**: a regra do `test_m04` usava variáveis `$(M04_CC)` e `$(M04_CFLAGS)` que nunca eram definidas, então não compilava. Era um teste do Romário que ficou sem reverter. Agora o `Makefile` inclui automaticamente `missoes/M*/Makefile.incremental`; `make test_m02`, `make test_m03`, `make test_m04` e `make test_missoes` funcionam na raiz.
+  - Ao colar código no VS Code os asteriscos de ponteiros (`t_elem *novo`) e de comentários às vezes sumiam; conferimos cada trecho colado antes de compilar.
+- Evidências de testes:
+  - `make -f missoes/M04/Makefile.incremental test_m04` → `M04: todos os testes passaram.` (código de saída 0), sem avisos de compilação depois de preencher os testes (antes aparecia `unused variable` nas funções vazias).
+  - Com `-fsanitize=address,undefined` → `M04: todos os testes passaram.`, sem nenhum erro de memória.
+  - Regressão: `make test_missoes` roda M02, M03 e M04 e todas passam (`M02: teste de contrato passou.`, `M03: todos os testes passaram.`, `M04: todos os testes passaram.`, código 0). A M03 também passou com ASan/UBSan.
+  - Teste falhando antes da correção: `Assertion 'lse_inserir_fim(NULL,&x)==0' failed` (`test_m04.c:80`). Depois da correção, passou. Detalhes no relatório de testes.
+- Próxima ação: M05, assim que o professor liberar o pacote da missão. Antes disso, deixar o `CHECKLIST.md` da M04 marcado e fazer o commit final identificável da missão.
