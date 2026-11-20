@@ -43,15 +43,82 @@ lista -> inicio -> [carga=&c | prox] -> [carga=&b | prox] -> [carga=&a | prox=NU
 - **Encapsulamento:** `t_elem` continua somente em `src/lse.c`; nenhum módulo cliente acessa os nós diretamente.
 
 ## M04 — Inserção no fim, busca e remoção
-Remoção do meio (`b`) em `a -> b -> c`: só o `prox` do anterior muda.
+
+Nesta missão a LSE continua sem ponteiro `fim`. Por isso inserir no fim, buscar e remover por chave percorrem a cadeia (O(n)); remover do início é O(1). Nos desenhos, `[x]` é um nó e `NULL` é o fim da cadeia.
+
+### Inserção no fim
+`lse_inserir_fim` aloca o nó, confere o `malloc`, guarda a carga e coloca `prox = NULL`. Depois liga o nó ao final:
 
 ```
-antes:  inicio -> [a] -> [b] -> [c] -> NULL
-depois: inicio -> [a] ---------> [c] -> NULL      (nó de b liberado, carga &b devolvida)
+lista vazia:     inicio -> NULL                      tamanho = 0
+inserir a:       inicio -> [a] -> NULL               tamanho = 1   (inicio mudou)
+inserir b:       inicio -> [a] -> [b] -> NULL        tamanho = 2   (prox do último mudou)
+inserir c:       inicio -> [a] -> [b] -> [c] -> NULL tamanho = 3   (prox do último mudou)
 ```
 
-- **Inserção no fim:** percorre até o último nó (O(n)); sem ponteiro `fim` até a M08. Lista vazia: o novo nó vira `inicio`.
-- **Remoção do início:** `inicio` passa a ser `inicio->prox`.
-- **Remoção do meio/fim:** o anterior passa a apontar para o `prox` do removido.
-- **Busca e remoção por chave:** usam o callback `t_comparador`; a LSE não conhece `t_musica` (músicas são comparadas por `id` fora de `lse.c`).
-- **Memória:** remover libera só o nó; a carga volta para quem chamou, que decide se libera.
+- Lista vazia: o único ponteiro que muda é `inicio`.
+- Lista com elementos: anda até o último nó (aquele com `prox == NULL`) e só o `prox` dele muda.
+- Se o `malloc` falhar, nada é ligado e a lista fica como estava.
+
+### Busca
+`lse_buscar` anda de `inicio` até `NULL` chamando `comparar(carga, chave)` em cada nó e devolve a **primeira** carga que der `0`. Nenhum ponteiro muda. Se terminar sem achar, devolve `NULL`.
+
+### Remoção: o que muda em cada caso
+
+**Lista vazia:** `inicio` já é `NULL`; nada a remover, devolve `NULL` e nada muda.
+
+**Lista com um nó** (`inicio -> [a] -> NULL`), removendo `a`:
+
+```
+antes:   inicio -> [a] -> NULL        tamanho = 1
+depois:  inicio -> NULL               tamanho = 0     (nó de a liberado, carga &a devolvida)
+```
+Muda `inicio` (passa a ser `a->prox`, que é `NULL`) e `tamanho`.
+
+**Lista com três nós** (`inicio -> [a] -> [b] -> [c] -> NULL`):
+
+```
+remover a (início):
+  antes:   inicio -> [a] -> [b] -> [c] -> NULL
+  depois:  inicio -------> [b] -> [c] -> NULL       muda: inicio
+
+remover b (meio):
+  antes:   inicio -> [a] -> [b] -> [c] -> NULL
+  depois:  inicio -> [a] --------> [c] -> NULL      muda: prox de a
+
+remover c (fim):
+  antes:   inicio -> [a] -> [b] -> [c] -> NULL
+  depois:  inicio -> [a] -> [b] -> NULL             muda: prox de b (passa a ser NULL)
+```
+
+Resumo dos ponteiros alterados:
+
+| Caso | Ponteiro alterado | Novo valor |
+|---|---|---|
+| Remover o primeiro nó | `inicio` | `primeiro->prox` |
+| Remover nó do meio | `anterior->prox` | `removido->prox` |
+| Remover o último nó | `anterior->prox` | `NULL` |
+| Remover o único nó | `inicio` | `NULL` (e `tamanho` volta a 0) |
+
+Em todos os casos o `tamanho` diminui em 1 e o nó removido é liberado.
+
+### Ordem das operações na remoção
+1. Percorrer a lista guardando o nó `atual` e o `anterior`.
+2. Ao achar a chave, **religar a cadeia primeiro** (`inicio` ou `anterior->prox`).
+3. **Guardar a carga** do nó numa variável local.
+4. Só então liberar o nó (`free`) e diminuir `tamanho`.
+5. Devolver a carga guardada.
+
+Essa ordem importa: depois do `free` não se pode mais ler `atual->carga` nem `atual->prox`, senão haveria acesso a memória já liberada.
+
+### Remoção do início
+`lse_remover_inicio` não precisa de busca: guarda o primeiro nó, move `inicio` para `inicio->prox`, guarda a carga, libera o nó e devolve a carga (O(1)). Lista vazia ou `NULL`: devolve `NULL`.
+
+### Chave duplicada
+`lse_buscar` e `lse_remover` agem só sobre a **primeira** ocorrência. Com `a` e `b` valendo 5 em `a -> b -> c`, remover a chave 5 retira `a` e mantém `b`.
+
+### Memória e invariantes
+- **Memória:** remover libera só o nó; a carga volta para quem chamou, que decide se libera. `lse_destruir` só libera cargas se receber uma função destruidora.
+- **Callback `t_comparador`:** a LSE não conhece `t_musica`; as músicas são comparadas por `id` em funções fora de `lse.c`.
+- **Invariantes preservadas:** `tamanho` sempre igual ao número de nós alcançáveis; `tamanho == 0` só quando `inicio == NULL`; o último nó aponta para `NULL`; sem ciclos.
+- **Limitação:** sem ponteiro `fim`, inserir no fim custa O(n). O ponteiro `fim` fica para a M08.
