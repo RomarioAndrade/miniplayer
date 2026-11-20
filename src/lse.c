@@ -85,38 +85,41 @@ void lse_percorrer(const t_lse *l, t_lse_visitar cb_visitar)
     }
 } /* M03 */
 
+/* Insere a carga no fim (percorre a cadeia, O(n)). Devolve 1 em sucesso;
+   0 se lista NULL ou malloc falhar (lista nao e alterada). Carga NULL e permitida. */
 int lse_inserir_fim(t_lse *l, void *c)
 {
     if (l == NULL)
     {
-        return -1;
+        return 0;
     }
-    t_elem *novo = malloc(sizeof(t_elem)); // Não é NULL então crio novo nó
-    novo->prox = NULL;
+
+    t_elem *novo = malloc(sizeof(t_elem));
+    if (novo == NULL)
+    {
+        return 0;
+    }
+
     novo->carga = c;
+    novo->prox = NULL;
 
     if (l->inicio == NULL)
     {
         l->inicio = novo;
-        l->tamanho++;
-        return 1;
     }
-
-    t_elem *atual = l->inicio;
-    if (novo != NULL)
+    else
     {
+        t_elem *atual = l->inicio;
         while (atual->prox != NULL)
         {
             atual = atual->prox;
         }
-        l->tamanho++;
         atual->prox = novo;
-        return 1; // definir codigo de mensagem de erro
     }
 
-    return 0;
-
-} /* TODO M04 */
+    l->tamanho++;
+    return 1;
+} /* M04 */
 void *lse_remover_inicio(t_lse *l)
 {
     if (l == NULL || l->inicio == NULL) // decisão de projeto
