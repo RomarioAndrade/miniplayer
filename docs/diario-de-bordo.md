@@ -39,3 +39,14 @@ Musica: wasurerarenai - sakanaction , duração: 4
   - O `gcc` não estava instalado no Windows; compilamos e testamos pelo WSL.
 - Evidências de testes: `make -f missoes/M03/Makefile.incremental test_m03` → `M03: todos os testes passaram.`, sem avisos de compilação. Também rodamos com AddressSanitizer e UBSan, sem nenhum erro. Detalhes no relatório de testes.
 - Próxima ação: M04 (inserir no fim, remover e buscar). O `tests/test_lse.c` antigo ainda para na linha de `lse_remover_inicio`, o que é esperado até lá.
+
+## Missão M04 — 18/11 (em andamento)
+- Integrantes e papéis: João Guilherme Martins (Tester), Romário Andrade (Desenvolvedor)
+- Objetivo: inserir no fim, buscar por chave e remover sem quebrar o encadeamento.
+- O que implementamos: `lse_inserir_fim`, `lse_remover_inicio` e `lse_buscar`. Falta `lse_remover` e completar os trechos marcados em `test_m04.c`.
+- Decisão técnica e justificativa: busca e remoção usam callback de comparação, para a lista continuar sem conhecer `t_musica`. Remover libera só o nó; a carga volta para quem chamou.
+- Problema encontrado e solução:
+  - A regra da M04 estava copiada no `Makefile` principal. Trocamos pela inclusão automática de `missoes/M*/Makefile.incremental`; agora `make test_m02`, `make test_m03`, `make test_m04` e `make test_missoes` funcionam na raiz (19/11).
+  - Pendências em `lse_inserir_fim`: devolve `-1` em vez de `0` para lista `NULL` e não confere o `malloc` antes de usar o nó.
+- Evidências de testes: M02 e M03 continuam passando (sem regressão); M04 para em `lse_remover`. Detalhes no relatório de testes.
+- Próxima ação: implementar `lse_remover`, corrigir `lse_inserir_fim` e completar os testes.

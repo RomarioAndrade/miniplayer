@@ -67,3 +67,28 @@ Para **cada função**, preencher:
 - Memória: não aloca nem libera. O callback não deve inserir nem remover nós durante o percurso.
 - Invariantes: preservadas (função somente de leitura sobre a cadeia).
 - Testes: `teste_lista_vazia`, `teste_encadeamento_e_percurso`, `teste_carga_generica`, `teste_carga_nula`.
+
+## M04 — Contratos da LSE (inserção no fim, busca e remoção)
+
+### `int lse_inserir_fim(t_lse *lista, void *carga)`
+- Pós-condições: novo nó no fim, `tamanho + 1`, ordem preservada.
+- Retorno: `1` em sucesso; `0` se `lista == NULL` ou falha de `malloc`.
+- Memória: a LSE aloca o nó; a carga continua de quem inseriu.
+- **Pendente no código:** devolve `-1` para `lista == NULL` e usa o nó antes de conferir o `malloc`.
+
+### `void *lse_buscar(const t_lse *lista, const void *chave, t_comparador comparar)`
+- Pós-condições: a lista não é alterada.
+- Retorno: a **primeira** carga com `comparar(carga, chave) == 0`; `NULL` se não encontrar ou se `lista`/`comparar` for `NULL`.
+
+### `void *lse_remover(t_lse *lista, const void *chave, t_comparador comparar)`
+- Pós-condições: remove só a **primeira** ocorrência, religa a cadeia, `tamanho - 1`.
+- Retorno: a carga removida; `NULL` se não encontrar ou argumentos inválidos.
+- Memória: libera só o nó. **Ainda é stub.**
+
+### `void *lse_remover_inicio(t_lse *lista)`
+- Retorno: carga do primeiro nó; `NULL` se a lista for vazia ou `NULL`.
+- Memória: libera só o nó.
+
+### Observações
+- Ambiguidade do `NULL`: como a carga `NULL` é aceita (M03), um retorno `NULL` em busca/remoção pode significar "não achou" ou "achou carga `NULL`". Os testes da M04 não usam carga `NULL`. Uma API futura poderia devolver `int` (achou/não achou) e entregar a carga por um parâmetro de saída (`void **`).
+- O enunciado chama o tipo de `t_comparador_lse`; o `lse.h` do projeto usa `t_comparador`. Mantivemos `t_comparador`.

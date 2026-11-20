@@ -12,10 +12,23 @@ $(BUILD)/test_musica: tests/test_musica.c src/musica.c | $(BUILD)
 	$(CC) $(CFLAGS) $^ -o $@
 test: $(BUILD)/test_musica 
 	@set -e; for t in $(BUILD)/test_musica; do echo "== $$t =="; ./$$t; done
-$(BUILD)/test_m04_incremental: missoes/M04/test_m04.c src/lse.c include/lse.h
-	@mkdir -p build
-	$(M04_CC) $(M04_CFLAGS) missoes/M04/test_m04.c src/lse.c -o $@
-test_m04: build/test_m04_incremental
-	./build/test_m04_incremental
 clean:
 	rm -rf $(BUILD)
+
+# -----------------------------------------------------------
+# MiniPlayer: testes incrementais das missões
+# -----------------------------------------------------------
+
+# Descobre automaticamente as missões instaladas.
+ARQUIVOS_MISSOES := $(wildcard missoes/M*/Makefile.incremental)
+
+# Define os nomes dos testes, inclusive o da M02.
+TESTES_MISSOES := $(patsubst missoes/M%/Makefile.incremental,test_m%,$(ARQUIVOS_MISSOES))
+
+# Incorpora as regras de cada missão, sem alterar seus arquivos.
+-include $(ARQUIVOS_MISSOES)
+
+.PHONY: test_missoes
+
+# Executa todos os testes das missões instaladas.
+test_missoes: $(TESTES_MISSOES)

@@ -11,11 +11,11 @@
 ## Diagrama de dependências
 MiniPlayer → (LSE, Pilha, Fila) → LSE → t_elem interno.
 
-## Decisões técnicas (preencher)
-- Por que `void *`?
-- Quem é dono das cargas?
-- Como tratar referências compartilhadas?
-- Quando adicionar ponteiro `fim`?
+## Decisões técnicas
+- **Por que `void *`?** Assim a mesma LSE guarda qualquer tipo (músicas, inteiros nos testes) sem conhecer `t_musica`. Comparar e destruir cargas fica a cargo de callbacks.
+- **Quem é dono das cargas?** Quem as criou. A lista é dona só dos nós: remover devolve a carga sem liberá-la, e `lse_destruir` só libera as cargas se receber uma função destruidora.
+- **Como tratar referências compartilhadas?** A biblioteca é dona das músicas; fila e histórico só guardam ponteiros para elas e são destruídos com `NULL`. Antes de liberar uma música, tirar as referências a ela da fila e do histórico.
+- **Quando adicionar ponteiro `fim`?** Quando inserir no fim precisar ser O(1), por exemplo ao enfileirar na fila. Previsto para a M08; até lá, `lse_inserir_fim` percorre a lista (O(n)).
 
 ## M02 — Decisões de memória e encapsulamento
 - **Representação opaca:** `t_elem` e os campos de `struct lse` ficam somente em `src/lse.c`; `include/lse.h` expõe apenas `typedef struct lse t_lse`. Os módulos clientes (pilha, fila, miniplayer) não acessam nós diretamente.
@@ -41,3 +41,17 @@ lista -> inicio -> [carga=&c | prox] -> [carga=&b | prox] -> [carga=&a | prox=NU
 - **Carga `NULL`:** aceita. O nó existe e conta no `tamanho`.
 - **Falha de alocação:** `lse_inserir_inicio` devolve `0` e a lista fica como estava.
 - **Encapsulamento:** `t_elem` continua somente em `src/lse.c`; nenhum módulo cliente acessa os nós diretamente.
+
+## M04 — Inserção no fim, busca e remoção
+Remoção do meio (`b`) em `a -> b -> c`: só o `prox` do anterior muda.
+
+```
+antes:  inicio -> [a] -> [b] -> [c] -> NULL
+depois: inicio -> [a] ---------> [c] -> NULL      (nó de b liberado, carga &b devolvida)
+```
+
+- **Inserção no fim:** percorre até o último nó (O(n)); sem ponteiro `fim` até a M08. Lista vazia: o novo nó vira `inicio`.
+- **Remoção do início:** `inicio` passa a ser `inicio->prox`.
+- **Remoção do meio/fim:** o anterior passa a apontar para o `prox` do removido.
+- **Busca e remoção por chave:** usam o callback `t_comparador`; a LSE não conhece `t_musica` (músicas são comparadas por `id` fora de `lse.c`).
+- **Memória:** remover libera só o nó; a carga volta para quem chamou, que decide se libera.

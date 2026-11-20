@@ -101,3 +101,26 @@ Nenhum vazamento nem acesso inválido foi reportado.
 - O enunciado usa `t_visitar` no protótipo e declara `t_lse_visitar`; usamos `t_lse_visitar`.
 - A primeira versão rejeitava carga `NULL`, contra o enunciado; corrigido.
 - Asteriscos perdidos ao copiar o código causaram erro de sintaxe; corrigido.
+
+## M04 — Inserção no fim, busca e remoção (em andamento)
+| ID | Missão | Função/contrato | Entrada/cenário | Resultado esperado | Resultado obtido | Status |
+|---|---|---|---|---|---|---|
+| T13 | M04 | lse_inserir_fim, lse_buscar | `teste_inserir_fim_e_buscar` | ordem preservada; busca acha presentes e devolve `NULL` para ausente | asserções ainda não escritas | pendente |
+| T14 | M04 | lse_remover | `teste_remover_cabeca_meio_cauda`: remover `&b` do meio de `a,b,c,d` | devolve `&b` | devolveu `NULL` (stub) | reprovado |
+| T15 | M04 | lse_remover_inicio | `teste_remover_inicio`: lista vazia e com elementos | `NULL` na vazia; cargas na ordem | não executado (teste para no T14) | pendente |
+| T16 | M04 | lse_buscar, lse_remover | `teste_generico_musicas`: registro com `id` | acha e remove a música 22 | não executado | pendente |
+| T17 | M04 | todas | `teste_argumentos_invalidos`: lista `NULL`, callback `NULL` | `0`/`NULL` sem quebrar | não executado; deve falhar porque `lse_inserir_fim(NULL, …)` devolve `-1` | pendente |
+
+### Execução (19/11)
+```
+$ make test_missoes
+./build/m02_incremental
+M02: teste de contrato passou.
+./build/test_m03_incremental
+M03: todos os testes passaram.
+./build/test_m04_incremental
+test_m04_incremental: missoes/M04/test_m04.c:45: teste_remover_cabeca_meio_cauda: Assertion `lse_remover(l,&b,comparar_int)==&b' failed.
+make: *** [missoes/M04/Makefile.incremental:10: test_m04] Abortado
+```
+- Regressão: M02 e M03 continuam aprovadas.
+- M04: falha esperada enquanto `lse_remover` for stub.
