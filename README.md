@@ -1,6 +1,10 @@
 # MiniPlayer — ICC002 (2026/2)
 Projeto integrador progressivo, em duplas, em C. Reprodução **simulada**.
 
+## Integrantes
+- João Guilherme Franco de Sá Martins
+- Romário Roberto de Pádua Andrade
+
 ## Compilação e Execução
 `make` e `./build/miniplayer`.
 
@@ -17,3 +21,14 @@ Projeto integrador progressivo, em duplas, em C. Reprodução **simulada**.
 
 ## Como documentar
 Preencher `docs/arquitetura.md`, `docs/contratos.md`, `docs/diario-de-bordo.md` e `docs/relatorio-testes.md` a cada missão. Ver `GUIA_ESTUDANTE.md`.
+
+## Estado atual (M04)
+- Missões concluídas: M01 (música), M02 (lista vazia), M03 (inserção no início e percurso) e M04 (inserção no fim, busca e remoção) da lista simplesmente encadeada (`src/lse.c`).
+- Ainda como stub: `lse_inserir_ordenado` (M05), pilha (M06) e fila (M08).
+
+## Como executar os testes das missões
+Na raiz do projeto:
+- `make test_m02`, `make test_m03`, `make test_m04`: testes de cada missão.
+- `make test_missoes`: testes de todas as missões (regressão); passam M02, M03 e M04.
+- Também funciona sem o Makefile principal: `make -f missoes/M04/Makefile.incremental test_m04`.
+- Para detectar erros de memória: compile com `-fsanitize=address,undefined`.
