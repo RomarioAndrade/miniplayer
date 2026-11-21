@@ -113,6 +113,7 @@ Nenhum vazamento nem acesso inválido foi reportado.
 | T18 | M04 | lse_remover_inicio, lse_inserir_fim | esvaziar a lista com `lse_remover_inicio` e inserir de novo | lista vazia (tamanho 0) devolve `NULL`; depois de reinserir, tamanho 1 e carga correta | igual ao esperado | aprovado |
 | T19 | M04 | lse_buscar, lse_remover | `teste_generico_musicas`: registros `musica_t` com `id`, comparador por `id` | acha e remove a música 22 e mantém a 11 | igual ao esperado | aprovado |
 | T20 | M04 | todas | `teste_argumentos_invalidos`: lista `NULL`, lista vazia, comparador `NULL` | `lse_inserir_fim(NULL,…) == 0`; `NULL` nas demais; nada quebra; a lista continua íntegra | antes falhava: `lse_inserir_fim(NULL,&x)` devolvia `-1`; depois da correção, igual ao esperado | aprovado |
+| T21 | M04 | lse_remover | remover por chave o único elemento da lista | devolve a carga; lista vazia (tamanho 0) | igual ao esperado | aprovado |
 
 ### Antes da implementação (19/11)
 Com `lse_remover` ainda como stub, o teste da M04 parava na primeira remoção (a regressão da M02 e da M03 passava):
@@ -182,7 +183,7 @@ codigo: 0
 
 ### Casos-limite cobertos
 - Estrutura vazia: T15, T18 e T20 (busca, remoção e remoção do início em lista vazia).
-- Estrutura com um elemento: T13 (primeira inserção) e T14 (última remoção, lista final com um nó).
+- Estrutura com um elemento: T13 (primeira inserção), T14 (lista final com um nó) e T21 (remoção por chave do único elemento).
 - Remoção no início, no meio e no fim: T14 e T15.
 - Chave repetida: T16. Chave ausente: T17.
 - Esvaziar e reutilizar a lista: T18.
