@@ -97,6 +97,11 @@ static void teste_remover_inicio(void) {
     assert(lse_remover_inicio(l)==NULL);
     assert(lse_inserir_fim(l,&a)==1);
     esperados[0]=&a; conferir(l,1);
+    
+    // remover por chave o único elemento deixa a lista vazia
+    assert(lse_remover(l,&a,comparar_int)==&a);
+    conferir(l,0);
+    
     lse_destruir(l,NULL);
 }
 static void teste_generico_musicas(void) {
