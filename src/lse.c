@@ -1,6 +1,7 @@
 #include "lse.h"
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 /* Representacao interna: NAO mover para lse.h. */
 typedef struct elem
@@ -199,10 +200,43 @@ void *lse_remover(t_lse *l, const void *ch, t_comparador cmp)
 
 int lse_inserir_ordenado(t_lse *l, void *c, t_comparador cmp)
 {
-    (void)l;
-    (void)c;
-    (void)cmp;
-    return 0;
+
+    if (l == NULL || cmp == NULL)
+    {
+        return 0;
+    }
+
+    t_elem* novo = malloc(sizeof(t_elem));
+    if (novo != NULL)
+    {
+        novo->carga = c;
+        novo->prox=NULL;
+    }else{
+        return 0;
+    }  
+    
+    t_elem* anterior = NULL;
+    t_elem* atual = l->inicio;
+    bool found = true;
+    while ((atual != NULL) && (found)){
+        void* carga = atual->carga;
+        if(cmp(c,carga) >= 0){
+            anterior = atual;
+            atual = anterior->prox;
+        }else{
+            found = false;
+        }
+    }
+
+    if(anterior == NULL){
+        lse_inserir_inicio(l,c);
+    }else{
+        anterior->prox = l->inicio;
+        l->inicio = novo;
+        novo->prox = atual;
+    }
+    l->tamanho++;
+    return 1;
 } /* TODO M05 */
 
 /* Destroi cada carga com 'destruir' e libera a lista (NULL: nao toca nas cargas). */
