@@ -137,13 +137,13 @@ void *lse_remover_inicio(t_lse *l)
 
     return carga;
 
-}  /* M04 */
+} /* M04 */
 
 /* Busca a carga cuja chave satisfaz cmp(carga, chave) == 0; NULL se nao encontrar.
-    @param t_lse* 
-    @param void*ch 
+    @param t_lse*
+    @param void*ch
     @param t_comparador*
-    @return void *carga 
+    @return void *carga
 */
 void *lse_buscar(const t_lse *l, const void *ch, t_comparador cmp)
 {
@@ -151,7 +151,7 @@ void *lse_buscar(const t_lse *l, const void *ch, t_comparador cmp)
     {
         return NULL;
     }
-    //seguindo a mesma logica do for em lse_percorrer
+    // seguindo a mesma logica do for em lse_percorrer
     for (t_elem *elemento = l->inicio; elemento != NULL; elemento = elemento->prox)
     {
         if (cmp(elemento->carga, ch) == 0)
@@ -196,6 +196,14 @@ void *lse_remover(t_lse *l, const void *ch, t_comparador cmp)
     }
     return NULL; /* chave nao encontrada */
 } /* M04 */
+
+int lse_inserir_ordenado(t_lse *l, void *c, t_comparador cmp)
+{
+    (void)l;
+    (void)c;
+    (void)cmp;
+    return 0;
+} /* TODO M05 */
 
 /* Destroi cada carga com 'destruir' e libera a lista (NULL: nao toca nas cargas). */
 void lse_destruir(t_lse *l, void (*destruir)(void *))
