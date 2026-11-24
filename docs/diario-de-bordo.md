@@ -67,3 +67,31 @@ s
   - Regressão: `make test_missoes` roda M02, M03 e M04 e todas passam (`M02: teste de contrato passou.`, `M03: todos os testes passaram.`, `M04: todos os testes passaram.`, código 0). A M03 também passou com ASan/UBSan.
   - Teste falhando antes da correção: `Assertion 'lse_inserir_fim(NULL,&x)==0' failed` (`test_m04.c:80`). Depois da correção, passou. Detalhes no relatório de testes.
 - Próxima ação: M05, assim que o professor liberar o pacote da missão. Antes disso, deixar o `CHECKLIST.md` da M04 marcado e fazer o commit final identificável da missão.
+
+## Missão M05 — 23/11 a 24/11
+- Integrantes e papéis: João Guilherme Martins (Tester), Romário Andrade (Desenvolvedor)
+- Objetivo: inserir um elemento na posição certa de uma lista já ordenada, usando um comparador genérico, sem expor `t_elem` e sem ordenar a lista inteira a cada inserção.
+- O que implementamos: `lse_inserir_ordenado` em `src/lse.c` (Romário) e os testes em `missoes/M05/test_m05.c` (João): lista vazia, início, meio e fim com inteiros (`teste_vazia_inicio_meio_fim`), empates estáveis com registros de música (`teste_duplicados_estaveis`) e argumentos inválidos, reinserção e integração com `lse_remover` (`teste_invalido_e_reinsercao`). O kit da M05 foi instalado copiando só a pasta `missoes/M05`, sem substituir `src/lse.c`, `include/lse.h` nem o `Makefile`, e o commit da instalação foi feito antes de implementar.
+- Decisão técnica e justificativa:
+  - O comparador é chamado como `comparar(carga_existente, carga_nova)`, com duas cargas (na M04 a comparação era entre carga e chave).
+  - Empates: o laço avança enquanto `comparar(atual->carga, carga_nova) <= 0`, então o novo elemento entra **depois** dos iguais, preservando a ordem de chegada (estabilidade).
+  - A função devolve `0` para lista `NULL`, comparador `NULL` ou falha de `malloc`, e nesses casos a lista não é alterada (o `malloc` é conferido antes de qualquer ligação).
+  - A ligação segue a ordem `novo->prox = atual` e depois `inicio = novo` (se `anterior == NULL`) ou `anterior->prox = novo`, para nunca perder o resto da lista.
+  - Complexidade: tempo O(n) no pior caso e espaço extra O(1). A lista continua sem ponteiro `fim`.
+  - A lista não copia nem libera a carga; nenhuma cópia de `t_musica` é feita.
+  - O enunciado cita `t_lse_comparador` nos objetivos, mas a assinatura do contrato usa `t_comparador`, que é o nome que já existe no `lse.h`. Mantivemos `t_comparador` e não alteramos o cabeçalho.
+- Problema encontrado e solução:
+  - A primeira versão dos testes tinha trocado os `assert(1==0)` do kit por `assert(l)` depois de `lse_destruir`, e o terceiro teste estava comentado. Nenhum chamava `lse_inserir_ordenado`, então passavam sem verificar nada. Substituímos pelos testes completos, que conferem tamanho e ordem ponteiro a ponteiro.
+  - O arquivo `lse.c` terminava a função com `/* TODO M05 */`; trocamos por `/* M05 */`, com o aval do Romário.
+  - O `valgrind` não está instalado no WSL; a verificação de vazamentos foi feita com o LeakSanitizer, que já vem com o AddressSanitizer.
+- Evidências de testes:
+  - Kit original, antes de preencher os testes: `Assertion '1==0' failed` em `test_m05.c:20` (código 134).
+  - `make test_m05` → `M05: todos os testes passaram.` (código 0), sem avisos de compilação.
+  - Regressão: `make test_missoes` roda M02, M03, M04 e M05 e todas passam (código 0).
+  - Com `-fsanitize=address,undefined` → `M05: todos os testes passaram.`, sem nenhum erro de memória. Detalhes no relatório de testes.
+- Reflexão (questões do enunciado):
+  - **Por que inserir no início é O(1) e a inserção ordenada pode ser O(n)?** Inserir no início só mexe em `inicio`, sem procurar nada. Na inserção ordenada é preciso achar a posição, e como a lista encadeada não tem acesso direto a um nó do meio, o laço pode percorrer todos os nós (por exemplo, quando o novo é maior que todos).
+  - **Qual o risco de usar critérios diferentes em duas inserções na mesma lista?** A lista deixa de estar ordenada por qualquer critério. Como a função assume que a lista já está ordenada pelo mesmo critério, as inserções seguintes escolhem posições erradas e a ordem não se recupera.
+  - **Como o comparador permite ordenar por título, duração ou identificador sem alterar `lse.c`?** O `lse.c` só chama o ponteiro de função que recebe e nunca olha dentro da carga. Para mudar o critério basta passar outra função de comparação (`strcmp` do título, duração ou `id`), e a lista continua sem conhecer `t_musica`.
+  - **O que ocorre com a ordem relativa de elementos com chaves iguais?** Ela é mantida: o `<= 0` faz o novo elemento entrar depois dos iguais, então a ordem de chegada é preservada (inserção estável).
+- Próxima ação: M06 (pilha como especialização da lista), em 25/11. Antes disso, marcar o `CHECKLIST.md` da M05, atualizar o `README.md` e fazer o commit final da missão.
