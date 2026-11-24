@@ -111,3 +111,23 @@ Nesta missão a LSE continua sem ponteiro `fim`. Por isso `lse_inserir_fim`, `ls
 - **Ambiguidade do `NULL`:** como a carga `NULL` é aceita (M03), um retorno `NULL` em `lse_buscar`, `lse_remover` e `lse_remover_inicio` pode significar "não achou / lista vazia" ou "achou uma carga `NULL`". Por isso os testes da M04 não usam carga `NULL`; quem precisar distinguir os casos pode conferir `lse_tamanho` antes. Uma API futura poderia devolver `int` (achou / não achou) e entregar a carga por um parâmetro de saída (`void **`).
 - **Nome do tipo do comparador:** o enunciado da M04 chama o tipo de `t_comparador_lse`; o `lse.h` do projeto usa `t_comparador`. Mantivemos `t_comparador` e não alteramos o cabeçalho.
 - **Responsabilidade pela carga:** a LSE nunca libera a carga de um nó removido por `lse_remover` ou `lse_remover_inicio`; ela só libera cargas em `lse_destruir`, quando recebe uma função `destruir_carga`.
+
+## M05 — Contratos da LSE (inserção ordenada)
+
+Nesta missão a LSE continua sem ponteiro `fim`. A inserção ordenada percorre a cadeia até achar a posição, então custa O(n) no tempo e O(1) no espaço extra (só os ponteiros `anterior`, `atual` e `novo`).
+
+### `int lse_inserir_ordenado(t_lse *lista, void *carga, t_comparador comparar)`
+- Pré-condições: `lista != NULL` e `comparar != NULL`. A lista deve estar previamente ordenada pelo **mesmo critério** de `comparar`. A operação não corrige uma lista desordenada. `carga` pode ser qualquer ponteiro, inclusive `NULL` (decisão da M03).
+- Comparador: nesta operação é chamado como `comparar(carga_existente, carga_nova)`; os dois argumentos apontam para **cargas** (na M04, `lse_buscar` e `lse_remover` comparam uma carga com uma **chave**). O resultado é negativo, zero ou positivo conforme a primeira carga seja menor, igual ou maior que a segunda.
+- Pós-condições: em sucesso, um novo nó com a carga é ligado entre `anterior` e `atual`, na primeira posição em que `comparar(atual->carga, carga_nova) > 0`; `tamanho` aumenta exatamente 1 e a lista continua ordenada. Em lista vazia, o novo nó passa a ser o primeiro. Em falha, a lista não é alterada.
+- Empates (estabilidade): o novo elemento entra **depois** dos elementos já existentes com a mesma chave, mantendo a ordem de chegada. Na prática, o laço avança enquanto `comparar(atual->carga, carga_nova) <= 0`.
+- Retorno: `1` em sucesso; `0` se `lista == NULL`, se `comparar == NULL` ou se o `malloc` do nó falhar.
+- Memória: a LSE aloca o nó (`t_elem`) e confere o `malloc` antes de qualquer alteração da lista. A carga não é copiada (nenhuma cópia de `t_musica` é feita) e continua pertencendo a quem a inseriu.
+- Invariantes preservadas: `inicio` aponta para o primeiro nó, ou é `NULL` com a lista vazia; há exatamente `tamanho` nós alcançáveis a partir de `inicio`; `tamanho == 0` só se `inicio == NULL`; o último nó tem `prox == NULL`; sem ciclos; nenhum nó fica inacessível.
+- Complexidade: tempo O(n) no pior caso (inserir no fim ou com todos os elementos menores), O(1) se o novo for o menor; espaço extra O(1).
+- Testes: `missoes/M05/test_m05.c` (`teste_vazia_inicio_meio_fim`, `teste_duplicados_estaveis`, `teste_invalido_e_reinsercao`).
+
+### Observações
+- **Critério único por lista:** inserir com critérios diferentes na mesma lista (por exemplo, por `id` e depois por título) quebra a ordenação, porque a função só olha onde o novo elemento cabe segundo o critério recebido naquela chamada. A lista precisa ser sempre construída com o mesmo comparador.
+- **Nome do tipo do comparador:** o enunciado da M05 chama o tipo de `t_lse_comparador`; o `lse.h` do projeto usa `t_comparador`. Mantivemos `t_comparador` e não alteramos o cabeçalho. A assinatura usada é a prevista no `include/lse.h` do kit inicial.
+- **Ordem entre `lse_buscar` e `lse_remover`:** a lista ordenada não muda o funcionamento dessas funções; elas continuam percorrendo do início e agindo na primeira correspondência. Uma busca mais rápida em lista ordenada pode ser considerada em missão futura.
