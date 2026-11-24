@@ -201,3 +201,73 @@ codigo: 0
 - Comentário `/* TODO M04` sem fechar em `lse_remover_inicio`, que gerava o aviso `-Wcomment`; corrigido.
 - Erro `redefinition of 'lse_remover'` por causa do stub antigo que ficou no arquivo; o stub foi removido.
 - A regra do `test_m04` no `Makefile` principal usava variáveis indefinidas; o `Makefile` passou a incluir automaticamente `missoes/M*/Makefile.incremental`.
+
+## M05 — Inserção ordenada
+| ID | Missão | Função/contrato | Entrada/cenário | Resultado esperado | Resultado obtido | Status |
+|---|---|---|---|---|---|---|
+| T22 | M05 | lse_inserir_ordenado | `teste_vazia_inicio_meio_fim`: inserir 20 (lista vazia), 10 (início), 30 (fim), 15 (meio), depois 5 (novo início) e 40 (novo fim) | lista sempre ordenada: 5, 10, 15, 20, 30, 40; `tamanho` correto a cada inserção; ordem conferida ponteiro a ponteiro | o kit trazia `assert(1==0)`; depois do teste completo, igual ao esperado | aprovado |
+| T23 | M05 | lse_inserir_ordenado | `teste_duplicados_estaveis`: registros `musica_t` com `id` 10 (primeira), 10 (segunda), 5, 10 (terceira) e 20 | o novo elemento entra depois dos que têm a mesma chave: ordem final 5, primeira, segunda, terceira, 20; `lse_primeiro` devolve o `id` 5 | igual ao esperado | aprovado |
+| T24 | M05 | lse_inserir_ordenado | `teste_invalido_e_reinsercao`: lista `NULL`, comparador `NULL` (em lista vazia e não vazia) | devolve `0`; a lista e o `tamanho` não mudam | igual ao esperado | aprovado |
+| T25 | M05 | lse_inserir_ordenado | reinserir a mesma carga | cria um novo nó, depois do igual já existente; `tamanho` aumenta 1 | igual ao esperado | aprovado |
+| T26 | M05 | lse_inserir_ordenado, lse_remover | remover um elemento com `lse_remover` e inseri-lo de novo | a lista volta à posição ordenada correta | igual ao esperado | aprovado |
+
+### Antes da implementação (teste do kit)
+O arquivo `test_m05.c` entregue pelo professor traz três `assert(1==0)` propositais. Rodando-o contra o `lse.c`, ele para no primeiro:
+```
+$ ./build/test_m05_incremental
+test_m05_incremental: missoes/M05/test_m05.c:20: teste_vazia_inicio_meio_fim: Assertion `1==0' failed.
+codigo: 134
+```
+O compilador também avisava `unused variable` (`a`, `b`, `c`, `d`) em `teste_duplicados_estaveis` e `unused function` para `comparar_int` e `comparar_musica`. Esses avisos desapareceram quando os testes foram completados.
+
+### Depois dos testes completos (24/11)
+```
+$ make test_m05; echo "codigo: $?"
+gcc -std=c11 -Wall -Wextra -Wpedantic -g -Iinclude missoes/M05/test_m05.c src/lse.c -o build/test_m05_incremental
+./build/test_m05_incremental
+M05: todos os testes passaram.
+codigo: 0
+```
+Compilou sem nenhum aviso.
+
+### Regressão (M02 + M03 + M04 + M05)
+```
+$ make test_missoes; echo "codigo: $?"
+./build/m02_incremental
+M02: teste de contrato passou.
+./build/test_m03_incremental
+M03: todos os testes passaram.
+./build/test_m04_incremental
+M04: todos os testes passaram.
+./build/test_m05_incremental
+M05: todos os testes passaram.
+codigo: 0
+```
+M02, M03 e M04 continuam aprovadas depois da M05, sem regressão.
+
+### Memória (M05)
+- Compilador: gcc 15.2.0 (Ubuntu, via WSL). Ferramenta: AddressSanitizer e UBSan (o ASan inclui o detector de vazamentos, LeakSanitizer).
+```
+$ gcc -std=c11 -Wall -Wextra -Wpedantic -g -Iinclude -fsanitize=address,undefined missoes/M05/test_m05.c src/lse.c -o build/test_m05_asan
+$ ./build/test_m05_asan; echo "codigo: $?"
+M05: todos os testes passaram.
+codigo: 0
+```
+Nenhum vazamento nem acesso inválido foi reportado. O valgrind não está instalado neste ambiente, e a verificação de vazamentos foi feita com o LeakSanitizer.
+- Os testes usam variáveis automáticas como carga e passam `NULL` em `lse_destruir`, então nenhuma carga é liberada indevidamente. A lista só aloca e libera os nós.
+
+### Casos-limite cobertos
+- Lista vazia: T22 (primeira inserção) e T24 (argumentos inválidos).
+- Inserção no início, no meio e no fim: T22.
+- Valores iguais (empates estáveis): T23.
+- Mesma carga inserida duas vezes: T25.
+- Tipo de carga diferente de `int` (registro de música): T23.
+- Entradas `NULL` (lista e comparador) sem alterar a lista: T24.
+- Integração com a M04 (remover e reinserir): T26.
+
+### O que ainda não foi testado
+- Falha de `malloc` em `lse_inserir_ordenado`: não simulada. No código, o `malloc` é conferido antes de qualquer alteração da lista, e a função devolve `0` com a lista intacta.
+- Lista previamente desordenada: fora do contrato (pré-condição do enunciado), então a função não tenta corrigi-la.
+
+### Problemas encontrados
+- Na versão inicial dos testes, os `assert(1==0)` do kit tinham sido trocados por `assert(l)` depois de `lse_destruir`, o que não verificava a inserção. Foram substituídos por testes que chamam `lse_inserir_ordenado` e conferem tamanho e ordem.
