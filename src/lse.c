@@ -237,7 +237,7 @@ int lse_inserir_ordenado(t_lse *l, void *c, t_comparador cmp)
     }
     l->tamanho++;
     return 1;
-} /* TODO M05 */
+} /* M05 */
 
 /* Destroi cada carga com 'destruir' e libera a lista (NULL: nao toca nas cargas). */
 void lse_destruir(t_lse *l, void (*destruir)(void *))
