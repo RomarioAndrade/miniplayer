@@ -122,3 +122,122 @@ Essa ordem importa: depois do `free` não se pode mais ler `atual->carga` nem `a
 - **Callback `t_comparador`:** a LSE não conhece `t_musica`; as músicas são comparadas por `id` em funções fora de `lse.c`.
 - **Invariantes preservadas:** `tamanho` sempre igual ao número de nós alcançáveis; `tamanho == 0` só quando `inicio == NULL`; o último nó aponta para `NULL`; sem ciclos.
 - **Limitação:** sem ponteiro `fim`, inserir no fim custa O(n). O ponteiro `fim` fica para a M08.
+
+## M05 — Inserção ordenada
+
+Nesta missão a LSE continua sem ponteiro `fim`. `lse_inserir_ordenado` percorre a cadeia com dois ponteiros auxiliares até achar a posição do novo nó. Nos desenhos, `[x]` é um nó e `NULL` é o fim da cadeia.
+
+### Os três ponteiros
+- `novo`: o nó recém-criado com `malloc`, que guarda a carga nova.
+- `atual`: começa em `inicio` e avança enquanto `comparar(atual->carga, carga_nova) <= 0`.
+- `anterior`: o nó logo antes de `atual`. Começa em `NULL`, porque antes do primeiro nó não há ninguém.
+
+Quando o laço para, `novo` é encaixado entre `anterior` e `atual`.
+
+### Pseudocódigo
+```
+lse_inserir_ordenado(lista, carga, comparar):
+    se lista == NULL ou comparar == NULL:
+        devolver 0
+    novo = alocar nó
+    se alocação falhou:
+        devolver 0                      (a lista não foi tocada)
+    novo.carga = carga
+    anterior = NULL
+    atual = lista.inicio
+    enquanto atual != NULL e comparar(atual.carga, carga) <= 0:
+        anterior = atual
+        atual = atual.prox
+    novo.prox = atual
+    se anterior == NULL:
+        lista.inicio = novo             (início ou lista vazia)
+    senão:
+        anterior.prox = novo            (meio ou fim)
+    lista.tamanho = lista.tamanho + 1
+    devolver 1
+```
+
+### Os quatro casos
+Em todos os desenhos, inserimos a chave 20.
+
+**1) Lista vazia**
+```
+antes:   inicio -> NULL                anterior = NULL, atual = NULL
+depois:  inicio -> [20] -> NULL        tamanho = 1
+```
+O laço nem executa. Ligações: `novo->prox = atual (NULL)` e `inicio = novo`, porque `anterior == NULL`.
+
+**2) Início** (lista `30 -> 40`)
+```
+antes:   inicio -> [30] -> [40] -> NULL
+                    ^
+                  atual              anterior = NULL
+         comparar(30, 20) > 0  => o laço para sem avançar
+
+depois:  inicio -> [20] -> [30] -> [40] -> NULL
+```
+Ligações: `novo->prox = atual` e `inicio = novo`, porque `anterior == NULL`.
+
+**3) Meio** (lista `10 -> 30 -> 40`)
+```
+passo 1: inicio -> [10] -> [30] -> [40] -> NULL
+                    ^
+                  atual              anterior = NULL
+         comparar(10, 20) < 0  => avança
+
+passo 2: inicio -> [10] -> [30] -> [40] -> NULL
+                    ^        ^
+                anterior   atual
+         comparar(30, 20) > 0  => o laço para
+
+depois:  inicio -> [10] -> [20] -> [30] -> [40] -> NULL
+```
+Ligações: `novo->prox = atual` e `anterior->prox = novo`.
+
+**4) Fim** (lista `10 -> 15`)
+```
+antes:   inicio -> [10] -> [15] -> NULL
+                              ^       ^
+                          anterior   atual = NULL
+
+depois:  inicio -> [10] -> [15] -> [20] -> NULL
+```
+Ligações: `novo->prox = atual (NULL)` e `anterior->prox = novo`.
+
+### Resumo dos ponteiros alterados
+| Caso | Ponteiros alterados | Novos valores |
+|---|---|---|
+| Lista vazia | `novo->prox`, `inicio` | `NULL`, `novo` |
+| Início | `novo->prox`, `inicio` | antigo primeiro, `novo` |
+| Meio | `novo->prox`, `anterior->prox` | `atual`, `novo` |
+| Fim | `novo->prox`, `anterior->prox` | `NULL`, `novo` |
+
+Em todos os casos `tamanho` aumenta em 1.
+
+### Ordem das ligações
+1. Primeiro `novo->prox = atual`.
+2. Depois `inicio = novo` ou `anterior->prox = novo`.
+
+Essa ordem importa: se `anterior->prox` fosse alterado antes, o resto da lista (`atual` em diante) ficaria inacessível.
+
+### Empates (estabilidade)
+O laço usa `<= 0`, então ele continua andando enquanto a carga existente for menor **ou igual** à nova. O novo elemento fica depois de todos os que têm a mesma chave:
+```
+lista:   10 -> 20(a) -> 20(b) -> 30        inserir 20(novo)
+comparar(20a, 20) == 0  => avança
+comparar(20b, 20) == 0  => avança
+comparar(30,  20)  > 0  => para
+depois:  10 -> 20(a) -> 20(b) -> 20(novo) -> 30
+```
+Se o laço usasse `< 0`, o novo entraria **antes** dos iguais e a ordem de chegada se inverteria. O teste `teste_duplicados_estaveis` verifica essa decisão.
+
+### Complexidade
+- **Tempo:** O(n) no pior caso, quando o novo é maior ou igual a todos e o laço percorre a lista inteira (inserção no fim). No melhor caso (novo menor que o primeiro) é O(1). Inserir no início sem ordem, `lse_inserir_inicio`, é sempre O(1), porque não precisa procurar a posição.
+- **Espaço:** O(1) extra: só um nó novo e dois ponteiros auxiliares (`anterior` e `atual`). A carga não é copiada.
+
+### Memória e invariantes
+- **Memória:** a função aloca apenas o nó (`t_elem`) e confere o `malloc` antes de mexer na lista. A carga não é copiada nem liberada pela lista; continua pertencendo a quem a inseriu.
+- **Encapsulamento:** `t_elem` continua privado de `src/lse.c`; o cabeçalho `include/lse.h` não foi alterado e `lse.c` não depende de `t_musica`.
+- **Comparador genérico:** o critério de ordem vem de fora, pelo `t_comparador`. Trocar de `id` para título ou duração exige só outra função de comparação, sem mexer em `lse.c`.
+- **Invariantes preservadas:** `tamanho` igual ao número de nós alcançáveis; `tamanho == 0` só quando `inicio == NULL`; o último nó aponta para `NULL`; sem ciclos; nenhum nó inacessível.
+- **Pré-condição:** a lista precisa estar ordenada pelo mesmo critério. A função não verifica nem corrige isso.
