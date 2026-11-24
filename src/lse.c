@@ -220,7 +220,7 @@ int lse_inserir_ordenado(t_lse *l, void *c, t_comparador cmp)
     bool found = true;
     while ((atual != NULL) && (found)){
         void* carga = atual->carga;
-        if(cmp(c,carga) >= 0){
+        if(cmp(carga,c) <= 0){
             anterior = atual;
             atual = anterior->prox;
         }else{
@@ -229,11 +229,11 @@ int lse_inserir_ordenado(t_lse *l, void *c, t_comparador cmp)
     }
 
     if(anterior == NULL){
-        lse_inserir_inicio(l,c);
-    }else{
-        anterior->prox = l->inicio;
+        novo->prox = l->inicio;
         l->inicio = novo;
+    }else{
         novo->prox = atual;
+        anterior->prox = novo;
     }
     l->tamanho++;
     return 1;
