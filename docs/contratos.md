@@ -131,3 +131,39 @@ Nesta missão a LSE continua sem ponteiro `fim`. A inserção ordenada percorre 
 - **Critério único por lista:** inserir com critérios diferentes na mesma lista (por exemplo, por `id` e depois por título) quebra a ordenação, porque a função só olha onde o novo elemento cabe segundo o critério recebido naquela chamada. A lista precisa ser sempre construída com o mesmo comparador.
 - **Nome do tipo do comparador:** o enunciado da M05 chama o tipo de `t_lse_comparador`; o `lse.h` do projeto usa `t_comparador`. Mantivemos `t_comparador` e não alteramos o cabeçalho. A assinatura usada é a prevista no `include/lse.h` do kit inicial.
 - **Ordem entre `lse_buscar` e `lse_remover`:** a lista ordenada não muda o funcionamento dessas funções; elas continuam percorrendo do início e agindo na primeira correspondência. Uma busca mais rápida em lista ordenada pode ser considerada em missão futura.
+
+## M06 — Contratos da Pilha (criação, topo e destruição)
+
+A pilha é implementada por composição: `struct pilha { t_lse *lista; }` fica privada em `src/pilha.c`, e a pilha usa só a interface pública de `lse.h`.
+
+### Invariante da Pilha
+- Toda pilha devolvida por `pilha_criar` tem `lista != NULL`, e essa lista é usada só por ela.
+
+### `t_pilha *pilha_criar(void)`
+- Pré-condições: nenhuma.
+- Pós-condições: em sucesso, pilha vazia com uma lista vazia própria (criada por `lse_criar`).
+- Retorno: ponteiro para a pilha em sucesso; `NULL` se `lse_criar` ou o `malloc` da pilha falharem.
+- Falha parcial: se a lista foi criada e o `malloc` da pilha falhou, a lista é liberada com `lse_destruir(lista, NULL)` antes de devolver `NULL`. Em qualquer falha, nada fica alocado.
+- Memória: a pilha aloca o `t_pilha` e a LSE aloca a `t_lse`. Quem chama deve liberar as duas com `pilha_destruir`.
+- Invariantes: estabelece a invariante da pilha e as invariantes da LSE (lista vazia).
+- Complexidade: O(1).
+- Delegação: `lse_criar`.
+
+### `void *pilha_topo(const t_pilha *pilha)`
+- Pré-condições: `pilha` criada por `pilha_criar`, ou `NULL`.
+- Pós-condições: a pilha não é alterada; a carga do topo não é removida.
+- Retorno: a carga do topo (a primeira da lista); `NULL` com pilha vazia ou `pilha == NULL`.
+- Memória: não aloca nem libera; a carga continua pertencendo a quem a empilhou.
+- Complexidade: O(1).
+- Delegação: `lse_primeiro`.
+
+### `void pilha_destruir(t_pilha *pilha, void (*destruir_carga)(void *))`
+- Pré-condições: `pilha` criada por `pilha_criar`, ou `NULL`. Se `destruir_carga != NULL`, cada carga armazenada deve ter propriedade exclusiva da pilha e saber ser destruída por essa função.
+- Pós-condições: nós, lista e o objeto pilha são liberados. As cargas só são liberadas se `destruir_carga != NULL`.
+- Retorno: nenhum.
+- `pilha == NULL`: operação sem efeito.
+- Memória: libera a lista com `lse_destruir(pilha->lista, destruir_carga)`, repassando o callback sem alterá-lo, e depois libera o `t_pilha` com `free`. A lista é destruída antes da pilha porque o ponteiro para ela está guardado dentro da pilha.
+- Propriedade das cargas: com `destruir_carga == NULL`, as cargas não são tocadas. É o uso previsto para o histórico, em que as músicas pertencem à biblioteca.
+- Invariantes: não se aplica (a pilha deixa de existir).
+- Complexidade: O(n), com n cargas armazenadas, sem contar o custo do callback.
+- Delegação: `lse_destruir`.

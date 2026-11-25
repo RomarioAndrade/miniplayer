@@ -95,3 +95,23 @@ s
   - **Como o comparador permite ordenar por título, duração ou identificador sem alterar `lse.c`?** O `lse.c` só chama o ponteiro de função que recebe e nunca olha dentro da carga. Para mudar o critério basta passar outra função de comparação (`strcmp` do título, duração ou `id`), e a lista continua sem conhecer `t_musica`.
   - **O que ocorre com a ordem relativa de elementos com chaves iguais?** Ela é mantida: o `<= 0` faz o novo elemento entrar depois dos iguais, então a ordem de chegada é preservada (inserção estável).
 - Próxima ação: M06 (pilha como especialização da lista), em 25/11. Antes disso, marcar o `CHECKLIST.md` da M05, atualizar o `README.md` e fazer o commit final da missão.
+
+## Missão M06 — 25/11
+- Integrantes: João Guilherme Martins, Romário Andrade
+- Objetivo: implementar uma pilha genérica LIFO reutilizando a LSE das M03–M05 por composição, sem duplicar o encadeamento e sem acessar `t_elem`.
+- O que implementamos: em `src/pilha.c` (Romário), a estrutura privada `struct pilha { t_lse *lista; }`, `pilha_criar` (com tratamento de falha parcial), `pilha_topo` e `pilha_destruir` (com e sem callback).
+- Decisão técnica e justificativa:
+  - **Composição:** a pilha guarda um `t_lse *` e usa só as funções de `lse.h`. Assim reaproveita o encadeamento já testado e a representação da lista continua opaca.
+  - **Criação em passos:** primeiro `lse_criar`, depois o `malloc` da pilha. Se o segundo falhar, a lista já criada é liberada com `lse_destruir(lista, NULL)`, e não com `free`, porque a lista é um tipo opaco criado pela LSE.
+  - **Destruição:** `lse_destruir(p->lista, d)` e depois `free(p)`, nessa ordem, porque o ponteiro da lista está dentro da pilha. O callback é repassado sem alteração: com `NULL` as cargas ficam intactas (referências emprestadas, como as músicas da biblioteca no histórico); com uma função, as cargas são liberadas.
+  - **Topo:** o último empilhado fica no início da lista, então `pilha_topo` devolve `lse_primeiro(p->lista)`, só consultando, sem remover.
+  - Complexidade: criar e topo O(1); destruir O(n), sem contar o callback.
+- Problema encontrado e solução:
+  - A primeira versão de `pilha.c` redeclarava `t_elem` e montava um encadeamento próprio (`struct pilha { t_elem *topo; }`), o que o enunciado proíbe. Voltamos à estrutura do kit, com `t_lse *lista`.
+  - Faltava `#include <stdlib.h>`, e a compilação falhava com `implicit declaration of function 'malloc'` e `'free'`.
+  - Na falha parcial da criação, o código fazia `free(pilha)` dentro de `if (pilha == NULL)`, ou seja, `free(NULL)`, que não faz nada, e a lista criada antes vazava. Trocamos por `lse_destruir(lista, NULL)`. Regra adotada: em uma falha, liberar o que deu certo antes, e não o que acabou de falhar.
+  - `pilha_topo` devolvia `p->lista` (o ponteiro da lista) em vez da carga. Compilava sem aviso, porque todo ponteiro vira `void *`, mas o teste falhava com a pilha vazia (`pilha_topo(p)==NULL`). Trocamos por `lse_primeiro(p->lista)`.
+- Evidências de testes:
+  - `src/pilha.c` compila com `-std=c11 -Wall -Wextra -Wpedantic` sem avisos.
+  - Criar e destruir uma pilha vazia (com callback `NULL` e com callback), além de `pilha_destruir(NULL, ...)`, rodou com `-fsanitize=address,undefined` sem erros de memória nem vazamentos, e o callback não foi chamado para a pilha vazia.
+  - `pilha_topo` devolve `NULL` para pilha vazia (duas consultas seguidas) e para `NULL`, também sem erros com ASan/UBSan.

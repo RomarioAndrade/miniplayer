@@ -241,3 +241,42 @@ Se o laço usasse `< 0`, o novo entraria **antes** dos iguais e a ordem de chega
 - **Comparador genérico:** o critério de ordem vem de fora, pelo `t_comparador`. Trocar de `id` para título ou duração exige só outra função de comparação, sem mexer em `lse.c`.
 - **Invariantes preservadas:** `tamanho` igual ao número de nós alcançáveis; `tamanho == 0` só quando `inicio == NULL`; o último nó aponta para `NULL`; sem ciclos; nenhum nó inacessível.
 - **Pré-condição:** a lista precisa estar ordenada pelo mesmo critério. A função não verifica nem corrige isso.
+
+## M06 — Pilha por composição
+
+### Relação de composição
+A pilha **tem uma** lista: `struct pilha { t_lse *lista; };`, privada em `src/pilha.c`. O cabeçalho `include/pilha.h` expõe só `typedef struct pilha t_pilha`, então quem usa a pilha não enxerga a lista. A pilha não tem nós próprios: o encadeamento continua todo dentro da LSE, e `pilha.c` usa apenas a interface pública de `lse.h`, sem acessar `t_elem` nem os campos de `t_lse`.
+
+```
+t_pilha (malloc em pilha_criar)
+   └── t_lse (lse_criar)
+         └── nós t_elem (alocados pela LSE)
+               └── carga (pertence a quem a inseriu)
+```
+
+### Composição × duplicação
+Uma primeira versão de `pilha.c` redeclarava `t_elem` e montava um encadeamento próprio (`struct pilha { t_elem *topo; }`). Isso duplica código que já está testado na LSE e quebra o encapsulamento. Voltamos ao campo `t_lse *lista`, previsto no kit, para que a pilha só repasse o trabalho à lista.
+
+### Criação e falha parcial
+`pilha_criar` faz duas alocações, uma de cada vez:
+1. `lse_criar()`. Se falhar, nada foi alocado ainda e a função devolve `NULL`.
+2. `malloc` do `t_pilha`. Se falhar, a lista do passo 1 já existe e seria perdida, então ela é liberada com `lse_destruir(lista, NULL)` antes de devolver `NULL`.
+
+Regra usada: em uma falha, libera-se o que **deu certo antes**, nunca o ponteiro que acabou de falhar (que é `NULL`). A lista é liberada com `lse_destruir`, e não com `free`, porque quem a criou foi a LSE e o tipo é opaco. O callback é `NULL` porque a lista ainda está vazia.
+
+### Destruição e propriedade das cargas
+`pilha_destruir(p, d)` libera primeiro a lista, com `lse_destruir(p->lista, d)`, e depois o objeto pilha, com `free(p)`. A ordem importa: depois de `free(p)` não é mais possível ler `p->lista`.
+
+A pilha não decide sozinha o destino das cargas. Ela repassa o callback `d` sem alterá-lo:
+- `d == NULL`: só nós, lista e pilha são liberados; as cargas ficam intactas. É o caso do futuro histórico, em que as músicas pertencem à biblioteca e a pilha guarda apenas referências emprestadas.
+- `d != NULL`: a LSE chama `d(carga)` para cada carga ainda armazenada. Só é seguro quando a pilha é a dona exclusiva das cargas.
+
+Com `p == NULL` a função não faz nada (`free(NULL)` é permitido em C).
+
+### Topo
+O último empilhado fica no início da lista, então o topo é a primeira carga: `pilha_topo` devolve `lse_primeiro(p->lista)`. É só consulta (a carga não é removida, por isso o `const`); devolve `NULL` com pilha vazia ou `NULL`.
+
+### Complexidade
+- `pilha_criar`: O(1) em tempo e espaço.
+- `pilha_topo`: O(1), porque `lse_primeiro` só lê o início.
+- `pilha_destruir`: O(n) em tempo, com n cargas armazenadas, porque `lse_destruir` percorre todos os nós (sem contar o custo do callback); espaço extra O(1).
