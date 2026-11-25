@@ -23,17 +23,25 @@ t_pilha *pilha_criar(void) {
     return pilha; 
     
 }
+
 int pilha_empilhar(t_pilha *p, void *c)
 {
-    (void)p;
-    (void)c;
-    return 0;
+    if (p == NULL || p->lista == NULL)
+    {
+        return 0;
+    }
+    return lse_inserir_inicio(p->lista, c);
 }
+
 void *pilha_desempilhar(t_pilha *p)
 {
-    (void)p;
-    return NULL;
+    if(p == NULL || p->lista == NULL)
+    {
+        return NULL;
+    }
+    return lse_remover_inicio(p->lista);
 }
+
 void *pilha_topo(const t_pilha *p)
 {
     if (p == NULL)
