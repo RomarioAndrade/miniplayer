@@ -284,3 +284,77 @@ M06: todos os testes passaram.
 Compilou sem avisos. Com AddressSanitizer e UBSan (`test_m06.c` e `tests/test_pilha.c`), nenhum vazamento nem acesso inválido.
 
 Para conferir que o teste próprio detecta erro, trocamos `lse_inserir_inicio` por `lse_inserir_fim` numa cópia da pilha: o teste falhou, como esperado.
+
+### Antes da implementação de empilhar e desempilhar
+Com `pilha_empilhar` e `pilha_desempilhar` ainda como stubs (devolviam `0` e `NULL`), o teste do kit parava na primeira inserção:
+```
+$ make test_m06
+./build/test_m06_incremental
+test_m06_incremental: missoes/M06/test_m06.c:11: lifo: Assertion `pilha_empilhar(p,&a)==1' failed.
+codigo: 134
+```
+Depois de implementar as duas funções, o teste passou.
+
+### Regressão por missão (27/11)
+```
+$ make test_m02; make test_m03; make test_m04; make test_m05; make test_m06; echo "codigo: $?"
+./build/m02_incremental
+M02: teste de contrato passou.
+./build/test_m03_incremental
+M03: todos os testes passaram.
+./build/test_m04_incremental
+M04: todos os testes passaram.
+./build/test_m05_incremental
+M05: todos os testes passaram.
+./build/test_m06_incremental
+M06: todos os testes passaram.
+codigo: 0
+```
+Com o kit da M07 já instalado em `missoes/M07`, `make test_missoes` também tenta montar `test_m07`, que depende do `src/player.c` (ainda inexistente), então termina com erro. Isso não indica regressão: a regressão da M06 foi executada missão por missão, como acima.
+
+### Testes próprios (`make test`)
+```
+$ make test; echo "codigo: $?"
+== build/test_musica ==
+Musica: wasurerarenai - sakanaction , duração: 4
+== build/test_pilha ==
+test_pilha: OK
+codigo: 0
+```
+O aviso `unused parameter` em `src/musica.c` (função `musica_t`) é anterior à M06 e continua pendente, sem relação com a pilha.
+
+### Memória (M06)
+- Compilador: gcc 15.2.0 (Ubuntu, via WSL). Ferramenta: AddressSanitizer e UBSan (o ASan inclui o detector de vazamentos, LeakSanitizer).
+```
+$ gcc -std=c11 -Wall -Wextra -Wpedantic -g -Iinclude -fsanitize=address,undefined missoes/M06/test_m06.c src/pilha.c src/lse.c -o build/test_m06_asan
+$ ./build/test_m06_asan; echo "codigo: $?"
+M06: todos os testes passaram.
+codigo: 0
+$ gcc -std=c11 -Wall -Wextra -Wpedantic -g -Iinclude -fsanitize=address,undefined tests/test_pilha.c src/pilha.c src/lse.c -o build/test_pilha_asan
+$ ./build/test_pilha_asan; echo "codigo: $?"
+test_pilha: OK
+codigo: 0
+```
+Nenhum vazamento nem acesso inválido foi reportado. O valgrind não está instalado neste ambiente.
+- No teste `propriedade`, as cargas são alocadas com `malloc` e a pilha as libera com o callback `liberar`. Nos demais testes, as cargas são variáveis automáticas e a pilha é destruída com callback `NULL`, então nada é liberado indevidamente.
+
+### Casos-limite cobertos
+- Pilha vazia: `pilha_topo` e `pilha_desempilhar` devolvem `NULL` (T27, T28 e T29, inclusive no meio da sequência).
+- Pilha com um elemento: ao desempilhar o último, a pilha volta a ficar vazia e continua utilizável (T27, T28).
+- Reutilização depois de esvaziar: empilhar de novo e consultar o topo (T27, T29).
+- Topo não destrutivo: consultas repetidas devolvem a mesma carga (T27, T28).
+- Pilhas independentes: duas instâncias não interferem entre si (T27).
+- Destruição com callback (cargas liberadas) e com `NULL` (cargas intactas), e pilha vazia com callback sem chamá-lo (T27).
+- Pilha `NULL`: `pilha_empilhar` devolve `0`; `pilha_topo` e `pilha_desempilhar` devolvem `NULL`; `pilha_destruir(NULL, ...)` não faz nada (T27).
+- Intercalação longa de operações conferida contra um modelo (T29).
+
+### O que ainda não foi testado
+- Falha de `malloc` em `pilha_criar` e em `pilha_empilhar`: não simulada. No código, se a alocação da pilha falha depois da criação da lista, a lista é liberada com `lse_destruir(lista, NULL)`; e em `lse_inserir_inicio` o `malloc` é conferido antes de alterar a lista.
+- Carga `NULL`: não testada, de propósito. O enunciado pede cargas não nulas, porque `NULL` seria ambíguo com o retorno de pilha vazia.
+- Pilhas com milhares de elementos (desempenho): não medido; a análise de O(1) vem do código das operações da lista.
+
+### Problemas encontrados
+- A primeira versão de `pilha.c` redeclarava `t_elem` e montava um encadeamento próprio; foi substituída pela composição com `t_lse *lista`, como pede o enunciado.
+- Faltava `#include <stdlib.h>`, e a compilação falhava com `implicit declaration of function 'malloc'`.
+- Na falha parcial de `pilha_criar`, o código fazia `free` de um ponteiro `NULL` e a lista criada antes vazava; passou a usar `lse_destruir(lista, NULL)`.
+- `pilha_topo` devolvia o ponteiro da lista em vez da carga; passou a usar `lse_primeiro(p->lista)`.
