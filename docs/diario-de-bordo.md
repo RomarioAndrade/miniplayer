@@ -122,4 +122,4 @@ s
   - **Por que consultar o topo não pode remover a carga?** Consulta e remoção são operações diferentes: quem só quer olhar o topo perderia o elemento e a pilha mudaria sem ser pedido.
   - **Por que destruir o histórico não deve liberar as músicas?** As músicas pertencem à biblioteca; o histórico só guarda referências. Liberá-las deixaria a biblioteca com ponteiros inválidos (uso após `free` ou liberação dupla).
   - **Composição × duplicação?** Na composição a pilha usa a LSE já testada pela interface pública; duplicar seria reescrever o encadeamento dentro da pilha, com mais código para manter e testar.
-- Próxima ação: marcar o `CHECKLIST.md` da M06, atualizar o `README.md` e fazer o commit final da missão.
+- Próxima ação: M07 (histórico e navegação com duas pilhas), em 27/11. A M06 está concluída: checklist marcado, README atualizado e commit final feito.

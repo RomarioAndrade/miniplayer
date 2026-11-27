@@ -6,4 +6,4 @@
 - [x] Destruição respeita propriedade das cargas.
 - [x] Teste próprio e regressão executados.
 - [x] Complexidade e documentação registradas.
-- [ ] Commit M06.
+- [x] Commit M06.
