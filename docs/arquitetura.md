@@ -284,3 +284,41 @@ O último empilhado fica no início da lista, então o topo é a primeira carga:
 - `pilha_empilhar` e `pilha_desempilhar`: O(1), porque só alteram o início da lista.
 - `pilha_topo`: O(1), porque `lse_primeiro` só lê o início.
 - `pilha_destruir`: O(n) em tempo, com n cargas armazenadas, porque `lse_destruir` percorre todos os nós (sem contar o custo do callback); espaço extra O(1).
+
+### Estado da pilha passo a passo (atividade 1)
+O topo da pilha é o **início** da lista. Nos desenhos, a lista é lida da esquerda para a direita, e o primeiro nó é o topo. `[x]` é um nó e `NULL` é o fim da cadeia.
+
+```
+começo:            inicio -> NULL                        pilha vazia
+
+empilhar A:        inicio -> [A] -> NULL                 topo = A
+empilhar B:        inicio -> [B] -> [A] -> NULL          topo = B
+empilhar C:        inicio -> [C] -> [B] -> [A] -> NULL   topo = C
+
+consultar topo:    devolve C                             nada muda
+                   inicio -> [C] -> [B] -> [A] -> NULL
+
+desempilhar:       devolve C (o nó de C é liberado, a carga não)
+                   inicio -> [B] -> [A] -> NULL          topo = B
+
+empilhar D:        inicio -> [D] -> [B] -> [A] -> NULL   topo = D
+```
+
+O mesmo estado como pilha (o topo fica em cima):
+```
+depois de A, B, C:       depois de desempilhar:     depois de empilhar D:
+      | C |  <- topo            | B |  <- topo            | D |  <- topo
+      | B |                     | A |                     | B |
+      | A |                                               | A |
+```
+
+**Ordem de saída restante:** D, B, A (o último a entrar é o primeiro a sair). Depois do A, `pilha_desempilhar` devolve `NULL`, porque a pilha está vazia.
+
+### Ponteiros alterados em cada operação
+| Operação | Ponteiros alterados | Custo |
+|---|---|---|
+| `pilha_empilhar` | o novo nó passa a apontar para o antigo primeiro, e `inicio` passa a apontar para o novo nó | O(1) |
+| `pilha_desempilhar` | `inicio` passa a apontar para o segundo nó (e o primeiro nó é liberado) | O(1) |
+| `pilha_topo` | nenhum (só lê `inicio`) | O(1) |
+
+Esse desenho é o mesmo cenário do teste `teste_cenario_enunciado` (T28), que confere cada um desses passos.
