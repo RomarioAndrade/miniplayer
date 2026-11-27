@@ -99,13 +99,14 @@ s
 ## Missão M06 — 25/11
 - Integrantes: João Guilherme Martins, Romário Andrade
 - Objetivo: implementar uma pilha genérica LIFO reutilizando a LSE das M03–M05 por composição, sem duplicar o encadeamento e sem acessar `t_elem`.
-- O que implementamos: em `src/pilha.c` (Romário), a estrutura privada `struct pilha { t_lse *lista; }`, `pilha_criar` (com tratamento de falha parcial), `pilha_topo` e `pilha_destruir` (com e sem callback).
+- O que implementamos: em `src/pilha.c`, a estrutura privada `struct pilha { t_lse *lista; }`, `pilha_criar` (com tratamento de falha parcial), `pilha_topo` e `pilha_destruir` (Romário), e `pilha_empilhar` e `pilha_desempilhar` (João). Teste próprio em `tests/test_pilha.c` (cenário do enunciado e intercalação conferida contra um vetor-modelo), incluído no `make test`.
 - Decisão técnica e justificativa:
   - **Composição:** a pilha guarda um `t_lse *` e usa só as funções de `lse.h`. Assim reaproveita o encadeamento já testado e a representação da lista continua opaca.
   - **Criação em passos:** primeiro `lse_criar`, depois o `malloc` da pilha. Se o segundo falhar, a lista já criada é liberada com `lse_destruir(lista, NULL)`, e não com `free`, porque a lista é um tipo opaco criado pela LSE.
   - **Destruição:** `lse_destruir(p->lista, d)` e depois `free(p)`, nessa ordem, porque o ponteiro da lista está dentro da pilha. O callback é repassado sem alteração: com `NULL` as cargas ficam intactas (referências emprestadas, como as músicas da biblioteca no histórico); com uma função, as cargas são liberadas.
+  - **Empilhar/desempilhar no início:** delegam para `lse_inserir_inicio` e `lse_remover_inicio`, ambas O(1).
   - **Topo:** o último empilhado fica no início da lista, então `pilha_topo` devolve `lse_primeiro(p->lista)`, só consultando, sem remover.
-  - Complexidade: criar e topo O(1); destruir O(n), sem contar o callback.
+  - Complexidade: criar, empilhar, desempilhar e topo O(1); destruir O(n), sem contar o callback.
 - Problema encontrado e solução:
   - A primeira versão de `pilha.c` redeclarava `t_elem` e montava um encadeamento próprio (`struct pilha { t_elem *topo; }`), o que o enunciado proíbe. Voltamos à estrutura do kit, com `t_lse *lista`.
   - Faltava `#include <stdlib.h>`, e a compilação falhava com `implicit declaration of function 'malloc'` e `'free'`.
@@ -115,3 +116,10 @@ s
   - `src/pilha.c` compila com `-std=c11 -Wall -Wextra -Wpedantic` sem avisos.
   - Criar e destruir uma pilha vazia (com callback `NULL` e com callback), além de `pilha_destruir(NULL, ...)`, rodou com `-fsanitize=address,undefined` sem erros de memória nem vazamentos, e o callback não foi chamado para a pilha vazia.
   - `pilha_topo` devolve `NULL` para pilha vazia (duas consultas seguidas) e para `NULL`, também sem erros com ASan/UBSan.
+  - `make test_missoes`: M02 a M06 passam (`M06: todos os testes passaram.`). `make test`: `test_pilha: OK`. Com ASan/UBSan, sem erros nem vazamentos. Detalhes no relatório de testes (T27–T29).
+- Reflexão (questões do enunciado):
+  - **Por que inserir e remover no início dá O(1)?** Só se altera `inicio`, sem percorrer nada. Remover no fim de uma LSE é O(n), porque é preciso achar o penúltimo nó.
+  - **Por que consultar o topo não pode remover a carga?** Consulta e remoção são operações diferentes: quem só quer olhar o topo perderia o elemento e a pilha mudaria sem ser pedido.
+  - **Por que destruir o histórico não deve liberar as músicas?** As músicas pertencem à biblioteca; o histórico só guarda referências. Liberá-las deixaria a biblioteca com ponteiros inválidos (uso após `free` ou liberação dupla).
+  - **Composição × duplicação?** Na composição a pilha usa a LSE já testada pela interface pública; duplicar seria reescrever o encadeamento dentro da pilha, com mais código para manter e testar.
+- Próxima ação: marcar o `CHECKLIST.md` da M06, atualizar o `README.md` e fazer o commit final da missão.

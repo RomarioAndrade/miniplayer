@@ -132,7 +132,7 @@ Nesta missão a LSE continua sem ponteiro `fim`. A inserção ordenada percorre 
 - **Nome do tipo do comparador:** o enunciado da M05 chama o tipo de `t_lse_comparador`; o `lse.h` do projeto usa `t_comparador`. Mantivemos `t_comparador` e não alteramos o cabeçalho. A assinatura usada é a prevista no `include/lse.h` do kit inicial.
 - **Ordem entre `lse_buscar` e `lse_remover`:** a lista ordenada não muda o funcionamento dessas funções; elas continuam percorrendo do início e agindo na primeira correspondência. Uma busca mais rápida em lista ordenada pode ser considerada em missão futura.
 
-## M06 — Contratos da Pilha (criação, topo e destruição)
+## M06 — Contratos da Pilha
 
 A pilha é implementada por composição: `struct pilha { t_lse *lista; }` fica privada em `src/pilha.c`, e a pilha usa só a interface pública de `lse.h`.
 
@@ -148,6 +148,24 @@ A pilha é implementada por composição: `struct pilha { t_lse *lista; }` fica 
 - Invariantes: estabelece a invariante da pilha e as invariantes da LSE (lista vazia).
 - Complexidade: O(1).
 - Delegação: `lse_criar`.
+
+### `int pilha_empilhar(t_pilha *pilha, void *carga)`
+- Pré-condições: `pilha` criada por `pilha_criar`, ou `NULL`; `carga` não nula (NULL seria ambíguo com o retorno de pilha vazia).
+- Pós-condições: em sucesso, `carga` passa a ser o topo. Em falha, a pilha não muda.
+- Retorno: `1` em sucesso; `0` com `pilha == NULL` ou falha de alocação do nó.
+- Memória: a LSE aloca o nó; a carga não é copiada e continua pertencendo a quem a empilhou.
+- Complexidade: O(1).
+- Delegação: `lse_inserir_inicio`.
+- Testes: T27, T28, T29.
+
+### `void *pilha_desempilhar(t_pilha *pilha)`
+- Pré-condições: `pilha` criada por `pilha_criar`, ou `NULL`.
+- Pós-condições: o topo é removido e o elemento abaixo dele vira o novo topo.
+- Retorno: a carga do topo, **sem liberá-la**; `NULL` com pilha vazia ou `pilha == NULL`.
+- Memória: a LSE libera o nó; liberar a carga é responsabilidade de quem desempilha (se for o dono).
+- Complexidade: O(1).
+- Delegação: `lse_remover_inicio`.
+- Testes: T27, T28, T29.
 
 ### `void *pilha_topo(const t_pilha *pilha)`
 - Pré-condições: `pilha` criada por `pilha_criar`, ou `NULL`.

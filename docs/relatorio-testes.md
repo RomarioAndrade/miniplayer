@@ -195,12 +195,6 @@ codigo: 0
 - Carga `NULL` em busca e remoção: os testes da M04 não usam carga `NULL`, porque o retorno `NULL` fica ambíguo ("não achou" ou "achou carga `NULL`"). A limitação está registrada em `docs/contratos.md`.
 - `lse_tamanho(NULL) == 0`: o código já está alinhado com o contrato, mas os testes da M04 não têm uma asserção específica para esse caso.
 
-### Problemas encontrados
-- `lse_inserir_fim` devolvia `-1` para lista `NULL` (contrato e teste esperam `0`) e usava o nó antes de conferir o `malloc`; corrigido.
-- `lse_tamanho(NULL)` devolvia `-1`, contra o contrato da M02 (`0`); corrigido.
-- Comentário `/* TODO M04` sem fechar em `lse_remover_inicio`, que gerava o aviso `-Wcomment`; corrigido.
-- Erro `redefinition of 'lse_remover'` por causa do stub antigo que ficou no arquivo; o stub foi removido.
-- A regra do `test_m04` no `Makefile` principal usava variáveis indefinidas; o `Makefile` passou a incluir automaticamente `missoes/M*/Makefile.incremental`.
 
 ## M05 — Inserção ordenada
 | ID | Missão | Função/contrato | Entrada/cenário | Resultado esperado | Resultado obtido | Status |
@@ -265,9 +259,28 @@ Nenhum vazamento nem acesso inválido foi reportado. O valgrind não está insta
 - Entradas `NULL` (lista e comparador) sem alterar a lista: T24.
 - Integração com a M04 (remover e reinserir): T26.
 
-### O que ainda não foi testado
-- Falha de `malloc` em `lse_inserir_ordenado`: não simulada. No código, o `malloc` é conferido antes de qualquer alteração da lista, e a função devolve `0` com a lista intacta.
-- Lista previamente desordenada: fora do contrato (pré-condição do enunciado), então a função não tenta corrigi-la.
 
-### Problemas encontrados
-- Na versão inicial dos testes, os `assert(1==0)` do kit tinham sido trocados por `assert(l)` depois de `lse_destruir`, o que não verificava a inserção. Foram substituídos por testes que chamam `lse_inserir_ordenado` e conferem tamanho e ordem.
+
+
+## M06 — Pilha por composição
+| ID | Missão | Função/contrato | Entrada/cenário | Resultado esperado | Resultado obtido | Status |
+|---|---|---|---|---|---|---|
+| T27 | M06 | todas | `test_m06.c` (kit): LIFO, topo não destrutivo, pilhas independentes, destruição com e sem callback, pilha `NULL` | conforme os contratos do enunciado | igual ao esperado | aprovado |
+| T28 | M06 | empilhar, desempilhar, topo | `teste_cenario_enunciado` (próprio): empilhar A, B, C; topo; desempilhar; empilhar D | topo C, sai C, topo D; ordem restante D, B, A; depois `NULL` | igual ao esperado | aprovado |
+| T29 | M06 | empilhar, desempilhar, topo | `teste_intercalacao_com_modelo` (próprio): 15 operações intercaladas, conferidas contra um vetor-modelo, com desempilhar em pilha vazia no meio | topo e carga desempilhada iguais ao modelo a cada passo; `NULL` na pilha vazia | igual ao esperado | aprovado |
+
+### Execução e regressão (27/11)
+```
+$ make test
+== build/test_pilha ==
+test_pilha: OK
+$ make test_missoes
+M02: teste de contrato passou.
+M03: todos os testes passaram.
+M04: todos os testes passaram.
+M05: todos os testes passaram.
+M06: todos os testes passaram.
+```
+Compilou sem avisos. Com AddressSanitizer e UBSan (`test_m06.c` e `tests/test_pilha.c`), nenhum vazamento nem acesso inválido.
+
+Para conferir que o teste próprio detecta erro, trocamos `lse_inserir_inicio` por `lse_inserir_fim` numa cópia da pilha: o teste falhou, como esperado.

@@ -22,13 +22,14 @@ Projeto integrador progressivo, em duplas, em C. Reprodução **simulada**.
 ## Como documentar
 Preencher `docs/arquitetura.md`, `docs/contratos.md`, `docs/diario-de-bordo.md` e `docs/relatorio-testes.md` a cada missão. Ver `GUIA_ESTUDANTE.md`.
 
-## Estado atual (M05)
-- Missões concluídas: M01 (música), M02 (lista vazia), M03 (inserção no início e percurso), M04 (inserção no fim, busca e remoção) e M05 (inserção ordenada genérica) da lista simplesmente encadeada (`src/lse.c`).
-- Ainda como stub: pilha (M06) e fila (M08).
+## Estado atual (M06)
+- Missões concluídas: M01 (música), M02 (lista vazia), M03 (inserção no início e percurso), M04 (inserção no fim, busca e remoção) e M05 (inserção ordenada genérica) da lista simplesmente encadeada (`src/lse.c`); M06 (pilha LIFO por composição sobre a LSE, `src/pilha.c`).
+- Ainda como stub: fila (M08).
 
 ## Como executar os testes das missões
 Na raiz do projeto:
-- `make test_m02`, `make test_m03`, `make test_m04`, `make test_m05`: testes de cada missão.
-- `make test_missoes`: testes de todas as missões (regressão); passam M02, M03, M04 e M05.
-- Também funciona sem o Makefile principal: `make -f missoes/M05/Makefile.incremental test_m05`.
+- `make test_m02` … `make test_m06`: testes de cada missão.
+- `make test_missoes`: testes de todas as missões (regressão); passam M02 a M06.
+- `make test`: inclui o teste próprio da pilha (`tests/test_pilha.c`).
+- Também funciona sem o Makefile principal: `make -f missoes/M06/Makefile.incremental test_m06`.
 - Para detectar erros de memória: compile com `-fsanitize=address,undefined`.

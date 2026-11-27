@@ -273,10 +273,14 @@ A pilha não decide sozinha o destino das cargas. Ela repassa o callback `d` sem
 
 Com `p == NULL` a função não faz nada (`free(NULL)` é permitido em C).
 
+### Empilhar e desempilhar
+O topo é o **início** da lista: `pilha_empilhar` delega para `lse_inserir_inicio` e `pilha_desempilhar` para `lse_remover_inicio`. As duas mexem só em `inicio`, então são O(1). Usar o fim da LSE seria pior: sem ponteiro para o penúltimo nó, remover no fim exige percorrer a lista (O(n)). Desempilhar devolve a carga sem liberá-la.
+
 ### Topo
 O último empilhado fica no início da lista, então o topo é a primeira carga: `pilha_topo` devolve `lse_primeiro(p->lista)`. É só consulta (a carga não é removida, por isso o `const`); devolve `NULL` com pilha vazia ou `NULL`.
 
 ### Complexidade
 - `pilha_criar`: O(1) em tempo e espaço.
+- `pilha_empilhar` e `pilha_desempilhar`: O(1), porque só alteram o início da lista.
 - `pilha_topo`: O(1), porque `lse_primeiro` só lê o início.
 - `pilha_destruir`: O(n) em tempo, com n cargas armazenadas, porque `lse_destruir` percorre todos os nós (sem contar o custo do callback); espaço extra O(1).
